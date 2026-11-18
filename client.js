@@ -6,7 +6,7 @@ window.__ModuleLoader__.load({
     const { useState, useEffect, useRef } = React;
 
     const REC = 'http://127.0.0.1:8765';
-    const CADENCE_MIN = 50;
+    const CADENCE_MIN = 30;
     const SNOOZE_MIN = 15;
     const REDUCE = (typeof window !== 'undefined' && window.matchMedia)
       ? window.matchMedia('(prefers-reduced-motion: reduce)').matches : false;
@@ -19,11 +19,11 @@ window.__ModuleLoader__.load({
         pillIdle: '呼吸 · 今天还没做', pillTitle: '打开呼吸练习：做 3 次长呼气，完成自动记录',
         headerBtn: '呼吸', statsBtn: '统计', footBtn: '息',
         tabBreath: '练习', tabStats: '统计',
-        eb: '行气导引 · 意到气到', title: '让这一口气，走完一整圈', sub: '吸 6 秒 → 停 1 秒 → 呼 4 秒 · 吸气长、呼气短',
+        eb: '行气导引 · 意到气到', title: '让这一口气，走完一整圈', sub: '吸 6 秒 → 停 1 秒 → 呼 4 秒 · 吸气长、呼气短 · 约 33 秒',
         cueIdle: '坐直，气沉丹田。吸气：气随横膈膜下沉、经丹田落到脚底涌泉；呼气：横膈膜上回弹，气自脚底经丹田松回、轻呼出。',
-        cueInhale: '吸气（长）：意想气自头顶「百会」，经「下丹田」，下行至脚底「涌泉」。',
-        cueHold: '停顿 1 秒：气已到脚底「涌泉」，略停一下，别憋紧。',
-        cueExhale: '呼气（短）：横膈膜往上回弹，气自脚底「涌泉」松开、经「丹田」轻轻回引、把浊气呼出。',
+        cueInhale: '吸气：气随横膈膜下沉，经丹田落到脚底涌泉。',
+        cueHold: '停 1 秒：气到涌泉，略停，别憋紧。',
+        cueExhale: '呼气：横膈膜回弹，气自脚底经丹田轻呼出。',
         savedOk: '很好，完成了。今天已记录 ✓', savedQueued: '完成了。记录先存本地，稍后自动同步（不影响你呼吸）。', savedPending: '完成了，正在记录…',
         start: '开始 · 3 次', running: '进行中…', snooze: '稍后 15 分钟', done: '完成，回去干活',
         ariaClose: '关闭', ariaDialog: '呼吸',
@@ -41,11 +41,11 @@ window.__ModuleLoader__.load({
         pillIdle: 'Breathe · not yet today', pillTitle: 'Open a breathing session: 3 long exhales, recorded automatically',
         headerBtn: 'Breathe', statsBtn: 'Stats', footBtn: 'Shih',
         tabBreath: 'Practice', tabStats: 'Stats',
-        eb: 'Guided qi flow', title: 'Let this breath complete a full circle', sub: 'Inhale 6s → hold 1s → exhale 4s · longer in, shorter out',
+        eb: 'Guided qi flow', title: 'Let this breath complete a full circle', sub: 'Inhale 6s → hold 1s → exhale 4s · longer in, shorter out · ~33s',
         cueIdle: 'Sit tall, energy to the lower Dantian. Inhale: down with the diaphragm through the Dantian to the soles (Yongquan); exhale: the diaphragm springs up, energy releases from the soles through the Dantian.',
-        cueInhale: 'Inhale (long): energy from the crown (Baihui) down through the lower Dantian to the soles (Yongquan).',
-        cueHold: 'Hold 1s: energy has reached the soles; pause briefly, do not clench.',
-        cueExhale: 'Exhale (short): the diaphragm springs up; energy releases from the soles (Yongquan) through the Dantian and out.',
+        cueInhale: 'Inhale: follow the diaphragm down, through the Dantian to the soles (Yongquan).',
+        cueHold: 'Hold 1s: at the soles, pause gently.',
+        cueExhale: 'Exhale: the diaphragm springs up, energy releases from the soles through the Dantian.',
         savedOk: 'Nice — done. Recorded for today ✓', savedQueued: 'Done. Saved locally, will sync later (breathing unaffected).', savedPending: 'Done, recording…',
         start: 'Start · 3', running: 'Running…', snooze: 'Snooze 15 min', done: 'Done, back to work',
         ariaClose: 'Close', ariaDialog: 'Breathing',
@@ -63,6 +63,11 @@ window.__ModuleLoader__.load({
       aiGo: LANG === 'en' ? 'Start' : '开始',
       aiSkip: LANG === 'en' ? 'Skip' : '跳过',
       dndLabel: LANG === 'en' ? 'Do not disturb' : '勿扰（暂不提醒）',
+      hbIdle: LANG === 'en' ? 'Breathe' : '呼吸',
+      hbDone: LANG === 'en' ? 'Done ✓' : '已息 ✓',
+      hbDue: LANG === 'en' ? 'Breathe now' : '到点·呼吸',
+      hbOff: LANG === 'en' ? 'Offline' : '离线',
+      end: LANG === 'en' ? 'End' : '结束',
     };
 
     let lastActivity = Date.now();
@@ -119,65 +124,74 @@ window.__ModuleLoader__.load({
     }
 
     const CSS = [
-      '.shih-pill{display:inline-flex;align-items:center;gap:8px;background:var(--dsw-alias-bg-layer-1,#fff);border:1px solid var(--dsw-alias-border-l1,#e6e3db);border-radius:20px;padding:5px 12px;font-size:12.5px;color:var(--dsw-alias-label-secondary,#767166);cursor:pointer;font-family:inherit;transition:.15s;}',
-      '.shih-pill:hover{border-color:var(--dsw-alias-brand-primary,#2f8f7a);color:var(--dsw-alias-brand-primary,#2f8f7a);}',
-      '.shih-pill.done{background:var(--dsw-alias-brand-primary,#2f8f7a);border-color:var(--dsw-alias-brand-primary,#2f8f7a);color:#fff;}',
-      '.shih-pill.due{border-color:var(--dsw-alias-brand-primary,#2f8f7a);color:var(--dsw-alias-brand-primary,#2f8f7a);animation:shih-pulse 2.2s ease-in-out infinite;}',
-      '.shih-pill.offline{opacity:.75;}',
-      '@keyframes shih-pulse{0%,100%{box-shadow:0 0 0 0 rgba(47,143,122,0);}50%{box-shadow:0 0 0 5px rgba(47,143,122,.25);}}',
-      '.shih-dot{width:9px;height:9px;border-radius:50%;background:currentColor;opacity:.9;}',
-      '.shih-headerbtn{display:inline-flex;align-items:center;gap:6px;background:var(--dsw-alias-brand-primary,#2f8f7a);border:1px solid var(--dsw-alias-brand-primary,#2f8f7a);border-radius:8px;padding:5px 12px;font-size:12.5px;font-weight:600;color:#fff;cursor:pointer;font-family:inherit;line-height:1;box-shadow:0 1px 3px rgba(47,143,122,.35);}',
-      '.shih-headerbtn:hover{background:#277a68;border-color:#277a68;color:#fff;}',
-      '.shih-headerbtn.alt{background:var(--dsw-alias-bg-layer-1,#fff);color:var(--dsw-alias-brand-primary,#2f8f7a);border-color:var(--dsw-alias-brand-primary,#2f8f7a);font-weight:500;box-shadow:none;}',
-      '.shih-headerbtn.alt:hover{background:var(--dsw-alias-brand-primary,#2f8f7a);color:#fff;}',
-      '.shih-headerbtn.done{background:var(--dsw-alias-state-success-primary,#1f9d6b);border-color:var(--dsw-alias-state-success-primary,#1f9d6b);color:#fff;}',
-      '.shih-headerbtn.due{animation:shih-pulse 2.2s ease-in-out infinite;}',
-      '.shih-hwrap{display:inline-flex;gap:6px;align-items:center;}',
-      '.shih-scrim{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;background:rgba(20,24,22,.28);backdrop-filter:blur(3px);}',
-      '.shih-card{position:relative;width:min(600px,90vw);max-height:90vh;overflow:auto;background:var(--dsw-alias-bg-overlay,#fff);border:1px solid var(--dsw-alias-border-l1,#e6e3db);border-radius:16px;padding:22px 22px 18px;box-shadow:0 10px 30px rgba(0,0,0,.18);text-align:center;color:var(--dsw-alias-label-primary,#2b2a26);font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;outline:none;}',
-      '.shih-x{position:absolute;top:10px;right:14px;border:none;background:none;font-size:20px;color:var(--dsw-alias-label-secondary,#8a857a);cursor:pointer;}',
-      '.shih-tabs{display:flex;gap:6px;justify-content:center;margin-bottom:12px;}',
-      '.shih-tab{border:1px solid var(--dsw-alias-border-l1,#e6e3db);background:var(--dsw-alias-bg-layer-1,#fff);color:var(--dsw-alias-label-secondary,#6f6a60);font-size:13px;padding:5px 14px;border-radius:8px;cursor:pointer;font-family:inherit;}',
-      '.shih-tab.on{background:var(--dsw-alias-brand-primary,#2f8f7a);border-color:var(--dsw-alias-brand-primary,#2f8f7a);color:#fff;}',
-      '.shih-eb{font-size:11px;letter-spacing:.15em;color:var(--dsw-alias-brand-primary,#2f8f7a);font-weight:600;}',
-      '.shih-title{font-size:19px;margin:6px 0 2px;font-weight:600;}',
-      '.shih-sub{font-size:12.5px;color:var(--dsw-alias-label-secondary,#6f6a60);margin-bottom:8px;}',
-      '.shih-stage{position:relative;height:190px;display:flex;align-items:center;justify-content:center;}',
-      '.shih-glow{position:absolute;width:140px;height:140px;border-radius:50%;transform:scale(1.2);background:radial-gradient(circle,rgba(47,143,122,.25),rgba(47,143,122,0) 70%);will-change:transform;}',
-      '.shih-pacer{width:110px;height:110px;border-radius:50%;display:flex;flex-direction:column;align-items:center;transform:scale(.9);justify-content:center;color:#fff;background:radial-gradient(circle at 35% 30%,#4bb59c,#237a67);box-shadow:0 10px 30px rgba(35,122,103,.35);will-change:transform;transition:transform .1s linear;}',
-      '.shih-phase{font-size:12px;letter-spacing:.1em;}',
-      '.shih-num{font-size:24px;font-weight:300;}',
-      '.shih-cue{font-size:12.5px;color:var(--dsw-alias-label-secondary,#6f6a60);line-height:1.6;min-height:38px;margin:4px 0 6px;}',
-      '.shih-dots{display:flex;gap:7px;justify-content:center;margin-bottom:14px;}',
-      '.shih-dots i{width:7px;height:7px;border-radius:50%;background:var(--dsw-alias-border-l2,#dcd9d0);}',
-      '.shih-dots i.on{background:var(--dsw-alias-brand-primary,#2f8f7a);}',
-      '.shih-actions{display:flex;gap:9px;justify-content:center;flex-wrap:wrap;}',
-      '.shih-btn{border:1px solid var(--dsw-alias-border-l1,#e6e3db);background:var(--dsw-alias-bg-layer-1,#fff);border-radius:10px;padding:9px 16px;font-size:13px;color:var(--dsw-alias-label-secondary,#5c574d);cursor:pointer;font-family:inherit;}',
-      '.shih-btn:hover{border-color:var(--dsw-alias-brand-primary,#2f8f7a);}',
-      '.shih-btn.primary{background:var(--dsw-alias-brand-primary,#2f8f7a);border-color:var(--dsw-alias-brand-primary,#2f8f7a);color:#fff;}',
-      '.shih-btn.primary:disabled{opacity:.6;cursor:default;}',
-      '.shih-btn:focus-visible,.shih-x:focus-visible,.shih-pill:focus-visible,.shih-headerbtn:focus-visible,.shih-tab:focus-visible{outline:2px solid var(--dsw-alias-brand-primary,#2f8f7a);outline-offset:2px;}',
-      '.shih-foot{font-size:11px;color:var(--dsw-alias-label-secondary,#9a9488);margin-top:12px;line-height:1.5;}',
-      '.shih-stats{text-align:left;font-size:13px;}',
-      '.shih-stat-row{display:flex;justify-content:space-between;padding:6px 2px;border-bottom:1px solid var(--dsw-alias-border-l1,#eee);}',
-      '.shih-stat-row span{color:var(--dsw-alias-label-secondary,#6f6a60);}',
-      '.shih-stat-row b{font-weight:600;} .shih-stat-row b.ok{color:var(--dsw-alias-state-success-primary,#1f9d6b);} .shih-stat-row b.no{color:var(--dsw-alias-label-secondary,#6f6a60);}',
-      '.shih-hist{display:flex;align-items:flex-end;gap:6px;height:58px;margin:12px 2px 4px;}',
-      '.shih-hbar{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:2px;}',
-      '.shih-hbar i{width:68%;background:var(--dsw-alias-border-l2,#dcd9d0);border-radius:3px 3px 0 0;display:block;min-height:3px;} .shih-hbar.on i{background:var(--dsw-alias-brand-primary,#2f8f7a);}',
-      '.shih-hbar span{font-size:9px;color:var(--dsw-alias-label-secondary,#9a9488);}',
-      '.shih-sec-title{font-weight:600;margin:14px 0 4px;font-size:12px;color:var(--dsw-alias-label-secondary,#6f6a60);}',
-      '.shih-field{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 2px;font-size:12.5px;color:var(--dsw-alias-label-primary,#2b2a26);}',
-      '.shih-field input:not([type=checkbox]),.shih-field select{border:1px solid var(--dsw-alias-border-l1,#e6e3db);background:var(--dsw-alias-bg-layer-1,#fff);border-radius:8px;padding:5px 8px;font-size:12.5px;color:inherit;font-family:inherit;min-width:200px;}',
-      '.shih-field input[type=checkbox]{min-width:auto;width:auto;}',
-      '.shih-msg{font-size:11.5px;color:var(--dsw-alias-state-success-primary,#1f9d6b);margin-top:8px;text-align:center;}',
-      '@media (prefers-reduced-motion: reduce){.shih-pill.due,.shih-headerbtn.due{animation:none;} .shih-pacer{transition:none;}}',
-      '.shih-hint{display:flex;gap:8px;align-items:center;justify-content:space-between;background:rgba(47,143,122,.10);border:1px solid rgba(47,143,122,.25);border-radius:10px;padding:8px 10px;margin-bottom:10px;font-size:11.5px;color:var(--dsw-alias-label-secondary,#5c574d);text-align:left;line-height:1.5;}',
-      '.shih-hint-x{border:none;background:var(--dsw-alias-brand-primary,#2f8f7a);color:#fff;border-radius:7px;padding:4px 10px;font-size:11.5px;cursor:pointer;white-space:nowrap;flex:0 0 auto;}',
-      '.shih-toast{position:fixed;right:18px;bottom:18px;z-index:60;display:flex;align-items:center;gap:8px;background:var(--dsw-alias-bg-layer-1,#fff);border:1px solid var(--dsw-alias-brand-primary,#2f8f7a);border-radius:12px;padding:10px 12px;box-shadow:0 6px 24px rgba(0,0,0,.16);max-width:330px;text-align:left;}',
-      '.shih-toast-t{font-size:12.5px;color:var(--dsw-alias-label-primary,#2b2a26);line-height:1.35;}',
-      '.shih-toast-b{border:none;background:transparent;color:var(--dsw-alias-label-secondary,#6f6a60);border-radius:7px;padding:5px 9px;font-size:12px;cursor:pointer;font-family:inherit;white-space:nowrap;}',
-      '.shih-toast-b.primary{background:var(--dsw-alias-brand-primary,#2f8f7a);color:#fff;}',
+      '.shih-card{--sh-ink:#2b2a26;--sh-sub:#5a4f3d;--sh-line:rgba(43,42,38,.16);--sh-accent:#a23b2a;--sh-accent-fg:#f7f2e6;--sh-glow:rgba(176,140,84,.22);--sh-serif:"Source Han Serif SC","Songti SC","Noto Serif SC","STSong",Georgia,serif;--sh-paper:radial-gradient(120% 100% at 50% 0%,#fdfaf2,#f6f0e3 70%,#efe6d6 100%);--sh-orb:radial-gradient(circle at 40% 36%,#6a6350,#40392d 60%,#2a251d 100%);--sh-orb-fg:#f7f2e6;--sh-btn-bg:#2b2a26;--sh-btn-fg:#f7f2e6;position:relative;width:min(600px,92vw);max-height:90vh;overflow:auto;background:var(--sh-paper);border:1px solid rgba(90,70,40,.28);border-radius:22px;padding:30px 30px 22px;box-shadow:0 22px 60px rgba(70,55,30,.20);text-align:center;color:var(--sh-ink);font-family:var(--sh-serif);outline:none;}',
+      '.shih-scrim{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;background:rgba(30,25,16,.20);backdrop-filter:blur(6px);}',
+      '.shih-x{position:absolute;top:12px;right:16px;border:none;background:none;font-size:22px;line-height:1;color:var(--sh-sub);cursor:pointer;}',
+      '.shih-tabs{display:flex;gap:22px;justify-content:center;margin:2px 0 18px;}',
+      '.shih-tab{border:none;background:none;color:var(--sh-sub);font-size:13.5px;letter-spacing:.18em;padding:4px 2px;cursor:pointer;font-family:var(--sh-serif);border-bottom:2px solid transparent;}',
+      '.shih-tab.on{color:var(--sh-accent);border-bottom-color:var(--sh-accent);}',
+      '.shih-eb{font-family:-apple-system,"PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif;font-size:11px;letter-spacing:.34em;color:var(--sh-accent);}',
+      '.shih-title{font-size:26px;margin:8px 0 2px;font-weight:600;letter-spacing:.12em;}',
+      '.shih-sub{font-family:-apple-system,"PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif;font-size:12.5px;letter-spacing:.16em;color:var(--sh-sub);margin-bottom:6px;}',
+      '.shih-stage{position:relative;height:220px;display:flex;align-items:center;justify-content:center;margin:8px 0;}',
+      '.shih-glow{position:absolute;width:128px;height:128px;border-radius:50%;transform:scale(1.1);background:radial-gradient(circle,var(--sh-glow),rgba(0,0,0,0) 62%);will-change:transform;}',
+      '.shih-pacer{width:134px;height:134px;border-radius:50%;transform:scale(.9);background:radial-gradient(circle at 40% 34%,#fffef9 0%,#ffeccb 38%,#f3d49b 68%,#e9c07f 86%,rgba(233,192,127,0) 100%);box-shadow:0 0 0 1px rgba(162,59,42,.20),0 8px 22px rgba(120,90,50,.22),inset 0 3px 10px rgba(255,255,255,.92),inset 0 -10px 20px rgba(200,150,90,.28);will-change:transform;}',
+      '.shih-phaselabel{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:2;display:flex;flex-direction:column;align-items:center;gap:2px;pointer-events:none;}',
+      '.shih-plabel-num{font-family:var(--sh-serif);font-size:16px;font-weight:600;line-height:1;color:#5a4f3d;margin-top:3px;}',
+      '.shih-plabel-phase{font-family:var(--sh-serif);font-size:18px;letter-spacing:.2em;text-indent:.2em;color:#241f18;}',
+      '.shih-plabel-phase.big{font-size:22px;letter-spacing:.28em;text-indent:.28em;color:#241f18;}',
+      '.shih-phase{font-family:var(--sh-serif);font-size:22px;letter-spacing:.28em;text-indent:.28em;}',
+      '.shih-num{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;font-size:13px;font-weight:300;opacity:.7;margin-top:2px;}',
+      '.shih-cue{font-size:13px;letter-spacing:.12em;color:var(--sh-sub);line-height:1.7;min-height:40px;margin:6px 0;}',
+      '.shih-dots{display:flex;gap:9px;justify-content:center;margin:10px 0 16px;}',
+      '.shih-dots i{width:7px;height:7px;border-radius:50%;background:var(--sh-line);}',
+      '.shih-dots i.on{background:var(--sh-accent);}',
+      '.shih-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}',
+      '.shih-btn{border:1px solid var(--sh-line);background:transparent;border-radius:10px;padding:10px 20px;font-size:13.5px;letter-spacing:.1em;color:var(--sh-sub);cursor:pointer;font-family:var(--sh-serif);}',
+      '.shih-btn:hover{border-color:var(--sh-accent);color:var(--sh-accent);}',
+      '.shih-btn.primary{background:var(--sh-btn-bg);border-color:var(--sh-btn-bg);color:var(--sh-btn-fg);}',
+      '.shih-btn.primary:hover{opacity:.9;color:var(--sh-btn-fg);border-color:var(--sh-btn-bg);}',
+      '.shih-btn.primary:disabled{opacity:.55;cursor:default;}',
+      '.shih-x:focus-visible,.shih-headerbtn:focus-visible,.shih-tab:focus-visible,.shih-btn:focus-visible{outline:2px solid var(--sh-accent,#a23b2a);outline-offset:2px;}',
+      '.shih-foot{font-family:-apple-system,"PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif;font-size:11.5px;letter-spacing:.04em;color:var(--sh-sub);margin-top:14px;line-height:1.6;}',
+      '.shih-stats{text-align:left;font-size:13.5px;}',
+      '.shih-stat-row{display:flex;justify-content:space-between;align-items:baseline;padding:12px 2px;border-bottom:1px solid var(--sh-line);}',
+      '.shih-stat-row span{font-family:-apple-system,"PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif;color:var(--sh-sub);font-size:12.5px;letter-spacing:.06em;}',
+      '.shih-stat-row b{font-family:var(--sh-serif);font-weight:600;font-size:16px;} .shih-stat-row b.ok{color:var(--sh-accent);} .shih-stat-row b.no{color:var(--sh-sub);}',
+      '.shih-hist{display:flex;align-items:flex-end;gap:9px;height:64px;margin:16px 2px 6px;}',
+      '.shih-hbar{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:6px;}',
+      '.shih-hbar i{width:100%;height:42px;background:var(--sh-line);border-radius:7px;display:block;} .shih-hbar.on i{background:linear-gradient(#c0523f,#a23b2a);}',
+      '.shih-hbar span{font-family:-apple-system,"PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif;font-size:10.5px;color:var(--sh-sub);}',
+      '.shih-offline{font-family:-apple-system,"PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif;font-size:13px;color:var(--sh-sub);text-align:center;padding:18px 4px;}',
+      '.shih-sec-title{font-family:-apple-system,"PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif;font-weight:600;margin:18px 0 6px;font-size:11.5px;letter-spacing:.24em;color:var(--sh-accent);}',
+      '.shih-field{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 2px;font-size:12.5px;font-family:-apple-system,"PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif;color:var(--sh-ink);}',
+      '.shih-field input:not([type=checkbox]),.shih-field select{border:1px solid var(--sh-line);background:rgba(255,255,255,.5);border-radius:8px;padding:6px 9px;font-size:12.5px;color:var(--sh-ink);font-family:-apple-system,"PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif;min-width:200px;}',
+      '.shih-field input[type=checkbox]{min-width:auto;width:auto;accent-color:var(--sh-accent);}',
+      '.shih-msg{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;font-size:11.5px;color:var(--sh-accent);margin-top:8px;text-align:center;}',
+      '.shih-hint{display:flex;gap:8px;align-items:center;justify-content:space-between;background:rgba(162,59,42,.08);border:1px solid rgba(162,59,42,.28);border-radius:10px;padding:9px 12px;margin-bottom:12px;font-family:-apple-system,"PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif;font-size:11.5px;color:var(--sh-sub);text-align:left;line-height:1.6;}',
+      '.shih-hint-x{border:none;background:var(--sh-accent,#a23b2a);color:var(--sh-accent-fg,#f7f2e6);border-radius:7px;padding:4px 10px;font-size:11.5px;cursor:pointer;white-space:nowrap;flex:0 0 auto;}',
+      '.shih-headerbtn{--hb-ink:#2b2a26;--hb-accent:#a23b2a;display:inline-flex;align-items:center;gap:6px;background:#f7f2e6;border:1px solid rgba(90,70,40,.28);border-radius:9px;padding:5px 12px;font-size:12.5px;font-weight:600;color:var(--hb-ink);cursor:pointer;font-family:"Source Han Serif SC","Songti SC",serif;letter-spacing:.1em;line-height:1;box-shadow:0 1px 3px rgba(70,55,30,.18);}',
+      '.shih-headerbtn:hover{border-color:var(--hb-accent);color:var(--hb-accent);}',
+      '.shih-headerbtn.done{background:transparent;border-color:rgba(162,59,42,.45);color:var(--hb-accent);}',
+      '.shih-headerbtn.due{color:var(--hb-accent);border-color:var(--hb-accent);animation:shih-pulse 2.2s ease-in-out infinite;}',
+      '.shih-dot{width:8px;height:8px;border-radius:50%;background:currentColor;opacity:.85;}',
+      '@keyframes shih-pulse{0%,100%{box-shadow:0 0 0 0 rgba(162,59,42,0);}50%{box-shadow:0 0 0 5px rgba(162,59,42,.22);}}',
+      '.shih-toast{--sh-ink:#2b2a26;--sh-sub:#6b5f49;--sh-line:rgba(43,42,38,.16);--sh-accent:#a23b2a;--sh-serif:"Source Han Serif SC","Songti SC",serif;position:fixed;right:18px;bottom:18px;z-index:60;display:flex;align-items:center;gap:10px;background:radial-gradient(120% 120% at 0% 0%,#f8f3e7,#efe7d6 80%);border:1px solid rgba(90,70,40,.24);border-radius:14px;padding:12px 14px;box-shadow:0 12px 34px rgba(60,45,25,.24);max-width:340px;text-align:left;font-family:var(--sh-serif);color:var(--sh-ink);}',
+      '.shih-toast-t{font-size:13px;line-height:1.4;letter-spacing:.04em;}',
+      '.shih-toast-b{border:1px solid var(--sh-line);background:transparent;color:var(--sh-sub);border-radius:8px;padding:6px 11px;font-size:12.5px;cursor:pointer;font-family:var(--sh-serif);letter-spacing:.08em;white-space:nowrap;}',
+      '.shih-toast-b.primary{background:var(--sh-accent,#a23b2a);border-color:var(--sh-accent,#a23b2a);color:var(--sh-accent-fg,#f7f2e6);}',
+      '@media (prefers-reduced-motion: reduce){.shih-headerbtn.due{animation:none;}.shih-pacer,.shih-glow{transition:none;}}',
+      '@media (prefers-color-scheme: dark){',
+        '.shih-card{--sh-ink:#ece7dc;--sh-sub:#b3a794;--sh-line:rgba(236,231,220,.16);--sh-accent:#d98a5f;--sh-accent-fg:#1c130d;--sh-glow:rgba(210,150,90,.20);--sh-paper:radial-gradient(120% 100% at 50% 0%,#241d15,#1a140e 68%,#120d09 100%);--sh-btn-bg:#7a4630;--sh-btn-fg:#f7f2e6;border-color:rgba(210,150,90,.22);box-shadow:0 22px 60px rgba(0,0,0,.5),inset 0 0 90px rgba(210,150,90,.05);}',
+        '.shih-scrim{background:rgba(8,6,4,.5);}',
+        '.shih-field input:not([type=checkbox]),.shih-field select{background:rgba(255,255,255,.06);}',
+        '.shih-headerbtn{--hb-ink:#ece7dc;--hb-accent:#d98a5f;background:rgba(255,255,255,.06);border-color:rgba(217,138,95,.32);}',
+        '.shih-headerbtn.done{background:transparent;border-color:rgba(217,138,95,.5);color:var(--hb-accent);}',
+        '.shih-toast{--sh-ink:#ece7dc;--sh-sub:#b3a794;--sh-line:rgba(236,231,220,.16);--sh-accent:#d98a5f;--sh-accent-fg:#1c130d;background:radial-gradient(120% 120% at 0% 0%,#241d15,#1a140e 85%);border-color:rgba(217,138,95,.24);}',
+        '.shih-hint{background:rgba(217,138,95,.12);border-color:rgba(217,138,95,.3);}',
+        '.shih-pacer{background:radial-gradient(circle at 40% 34%,#fff7ea 0%,#ffdca8 38%,#e9b878 72%,#d9a463 88%,rgba(217,164,99,0) 100%);box-shadow:0 0 0 1px rgba(217,138,95,.4),0 8px 22px rgba(0,0,0,.35),inset 0 3px 10px rgba(255,255,255,.75),inset 0 -10px 20px rgba(180,120,60,.35);}',
+        '.shih-hbar i{background:#9a8f76;} .shih-hbar.on i{background:linear-gradient(#e0916f,#c96b4e);}',
+      '}',
     ].join('');
 
     function Styles() { return h('style', { dangerouslySetInnerHTML: { __html: CSS } }); }
@@ -236,9 +250,10 @@ window.__ModuleLoader__.load({
       const s = store.status || {};
       const done = !!s.todayDone, offline = store.recOk === false, due = store.due && !done && !offline && !store.dnd;
       let cls = 'shih-headerbtn';
-      if (done) cls += ' done'; else if (due) cls += ' due';
+      if (done) cls += ' done'; else if (offline) cls += ' offline'; else if (due) cls += ' due';
+      const lbl = offline ? EXTRA.hbOff : (done ? EXTRA.hbDone : (due ? EXTRA.hbDue : EXTRA.hbIdle));
       return h(React.Fragment, null, h(Styles),
-        h('button', { className: cls, title: t.pillTitle, onClick: openBreath }, h('span', { className: 'shih-dot' }), h('span', null, t.headerBtn)));
+        h('button', { className: cls, title: lbl, 'aria-label': lbl, onClick: openBreath }, h('span', { className: 'shih-dot' }), h('span', null, lbl)));
     }
 
     function StatsView() {
@@ -248,9 +263,11 @@ window.__ModuleLoader__.load({
       const [threshold, setThreshold] = useState('1');
       const [msg, setMsg] = useState('');
       const [dnd, setDnd] = useState(!!store.dnd);
+      const [err, setErr] = useState(false);
 
       function load() {
-        fetch(REC + '/status').then(function (r) { return r.json(); }).then(setS).catch(function () {});
+        setErr(false);
+        fetch(REC + '/status').then(function (r) { if (!r.ok) throw new Error('bad'); return r.json(); }).then(function (j) { setS(j); }).catch(function () { setErr(true); });
         fetch(REC + '/history?days=7').then(function (r) { return r.json(); }).then(function (j) { setHist((j && j.days) || []); }).catch(function () {});
         fetch(REC + '/config').then(function (r) { return r.json(); }).then(function (j) {
           setRecipient(j.recipient || '');
@@ -271,17 +288,20 @@ window.__ModuleLoader__.load({
           .then(function () { setMsg(t.pausedMsg); }).catch(function () { setMsg(t.failMsg); });
       }
 
-      const maxCount = Math.max(1, hist.reduce(function (m, x) { return Math.max(m, x.count); }, 0));
-      const sendState = recipient ? recipient : '…';
+      if (err) {
+        return h('div', { className: 'shih-stats' },
+          h('div', { className: 'shih-offline' }, LANG === 'en' ? 'Recorder offline — stats unavailable.' : '记账服务离线，统计暂不可用。'),
+          h('div', { className: 'shih-actions', style: { justifyContent: 'center', marginTop: '12px' } },
+            h('button', { className: 'shih-btn primary', onClick: load }, LANG === 'en' ? 'Retry' : '重试')));
+      }
       return h('div', { className: 'shih-stats' },
         h('div', { className: 'shih-stat-row' }, h('span', null, t.stToday), h('b', { className: s && s.todayDone ? 'ok' : 'no' }, s ? (s.todayDone ? t.stDone : t.stNotDone) : '…')),
         h('div', { className: 'shih-stat-row' }, h('span', null, t.stStreakTotal), h('b', null, (s ? (s.streak || 0) : '…') + ' ' + t.stDays + ' / ' + (s ? (s.total || 0) : '…') + ' ' + t.stTimes)),
         h('div', { className: 'shih-stat-row' }, h('span', null, t.stLast), h('b', null, (s && s.last) ? s.last : '—')),
-        h('div', { className: 'shih-stat-row' }, h('span', null, t.stMissed), h('b', null, s ? ((s.missed == null ? '—' : s.missed) + ' ' + t.stDays) : '…')),
-        h('div', { className: 'shih-stat-row' }, h('span', null, t.stSend), h('b', null, sendState)),
+        (s && s.missed > 0) ? h('div', { className: 'shih-stat-row' }, h('span', null, t.stMissed), h('b', null, s.missed + ' ' + t.stDays)) : null,
         h('div', { className: 'shih-hist' }, hist.map(function (x, i) {
           return h('div', { key: i, className: 'shih-hbar' + (x.done ? ' on' : '') },
-            h('i', { style: { height: (6 + (x.count / maxCount) * 40) + 'px' } }),
+            h('i', null),
             h('span', null, String(x.date || '').slice(5)));
         })),
         h('div', { className: 'shih-sec-title' }, t.setTitle),
@@ -291,8 +311,7 @@ window.__ModuleLoader__.load({
         h('label', { className: 'shih-field' }, h('span', null, EXTRA.dndLabel), h('input', { type: 'checkbox', checked: dnd, onChange: function (e) { setDnd(e.target.checked); store.dnd = e.target.checked; if (e.target.checked) store.aiNudge = false; try { localStorage.setItem('shih.dnd', e.target.checked ? '1' : '0'); } catch (_) {} emit(); } })),
         h('div', { className: 'shih-actions' },
           h('button', { className: 'shih-btn primary', onClick: save }, t.save),
-          h('button', { className: 'shih-btn', onClick: pauseToday }, t.pauseToday),
-          h('button', { className: 'shih-btn', onClick: load }, t.refresh)),
+          h('button', { className: 'shih-btn', onClick: pauseToday }, t.pauseToday)),
         msg ? h('div', { className: 'shih-msg' }, msg) : null
       );
     }
@@ -347,7 +366,7 @@ window.__ModuleLoader__.load({
       useEffect(function () {
         if (!run) return;
         let phaseLocal = 'inhale', phaseStart = performance.now(), bs = 0, raf = 0, cancelled = false, lastPhase = '', lastNum = -1;
-        function setScale(s) { if (REDUCE) return; if (pacerRef.current) pacerRef.current.style.transform = 'scale(' + s + ')'; if (glowRef.current) glowRef.current.style.transform = 'scale(' + (s * 1.5) + ')'; }
+        function setScale(s) { if (REDUCE) return; if (pacerRef.current) pacerRef.current.style.transform = 'scale(' + s + ')'; if (glowRef.current) glowRef.current.style.transform = 'scale(' + (s * 1.12) + ')'; }
         function finish() { setRun(false); setPhase('✓'); setNum(''); setSaved(true); setRecordState('pending'); recordDone(target).then(function (ok) { setRecordState(ok ? 'ok' : 'queued'); }); }
         function tick(now) {
           if (cancelled) return;
@@ -399,6 +418,8 @@ window.__ModuleLoader__.load({
         else cue = t.cueInhale;
       } else cue = t.cueIdle;
       const foot = offline ? t.footOffline : t.foot;
+      const orbPhase = (!run && !saved) ? '息' : phase;
+      const orbNum = run ? num : '';
 
       const breathBody = [
         showHint ? h('div', { className: 'shih-hint', key: 'hint' },
@@ -409,14 +430,19 @@ window.__ModuleLoader__.load({
         h('div', { className: 'shih-sub', key: 'su' }, t.sub),
         h('div', { className: 'shih-stage', key: 'st', 'aria-hidden': 'true' },
           h('div', { className: 'shih-glow', ref: glowRef }),
-          h('div', { className: 'shih-pacer', ref: pacerRef }, h('div', { className: 'shih-phase' }, phase), h('div', { className: 'shih-num' }, num))),
+          h('div', { className: 'shih-pacer', ref: pacerRef }),
+          h('div', { className: 'shih-phaselabel' },
+            h('div', { className: 'shih-plabel-phase' + (orbNum ? '' : ' big') }, orbPhase),
+            orbNum ? h('div', { className: 'shih-plabel-num' }, orbNum) : null)),
         h('div', { className: 'shih-cue', key: 'cu', 'aria-live': 'polite' }, cue),
         h('div', { className: 'shih-dots', key: 'do' }, [0, 1, 2].map(function (i) { return h('i', { key: i, className: i < breaths ? 'on' : '' }); })),
         saved
           ? h('div', { className: 'shih-actions', key: 'ac' }, h('button', { className: 'shih-btn primary', onClick: function () { close(); armReminder(CADENCE_MIN); } }, t.done))
-          : h('div', { className: 'shih-actions', key: 'ac' },
-              h('button', { className: 'shih-btn primary', disabled: run, onClick: start }, run ? t.running : t.start),
-              h('button', { className: 'shih-btn', onClick: snooze }, t.snooze)),
+          : run
+            ? h('div', { className: 'shih-actions', key: 'ac' }, h('button', { className: 'shih-btn', onClick: close }, EXTRA.end))
+            : h('div', { className: 'shih-actions', key: 'ac' },
+                h('button', { className: 'shih-btn primary', onClick: start }, t.start),
+                h('button', { className: 'shih-btn', onClick: snooze }, t.snooze)),
         h('div', { className: 'shih-foot', key: 'fo' }, foot),
       ];
 
