@@ -1,4 +1,4 @@
-# dsh-breath
+# dsh-deepbreath
 
 A DeepSeek Harness (DSH) session-view plugin for a short, guided breathing break — an ambient "Breathe" entry in the session header that opens a paced card.
 

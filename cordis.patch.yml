@@ -1,4 +1,4 @@
 - insert:
-    - id: dsh-breath
-      name: 'dsh-breath'
+    - id: dsh-deepbreath
+      name: 'dsh-deepbreath'
       config: {}
