@@ -1,5 +1,8 @@
 # dsh-deepbreath
 
+> **这是一个 DeepSeek Harness（DSH）插件 · A DeepSeek Harness (DSH) plugin.**
+> 在 GitHub 上可通过 topic `dsh-plugin`、`dsh`、`deepseek-harness` 发现本仓库。
+
 A DeepSeek Harness (DSH) session-view plugin for a short, guided breathing break — an ambient "Breathe" entry in the session header that opens a paced card.
 
 - **Guided qi-flow breathing**: inhale 6s → hold 1s → exhale 4s (inhale long, exhale short). Inhale visualization: crown (Baihui) → lower Dantian → soles (Yongquan); exhale reverses.
