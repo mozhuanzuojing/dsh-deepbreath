@@ -209,9 +209,7 @@ window.__ModuleLoader__.load({
       const [hist, setHist] = useState([]);
       const [recipient, setRecipient] = useState('');
       const [threshold, setThreshold] = useState('1');
-      const [dry, setDry] = useState(true);
       const [msg, setMsg] = useState('');
-      const [dryCfg, setDryCfg] = useState(true);
 
       function load() {
         fetch(REC + '/status').then(function (r) { return r.json(); }).then(setS).catch(function () {});
@@ -219,13 +217,12 @@ window.__ModuleLoader__.load({
         fetch(REC + '/config').then(function (r) { return r.json(); }).then(function (j) {
           setRecipient(j.recipient || '');
           setThreshold(String(j.threshold_missed_days || 1));
-          setDry(!!j.dry_run); setDryCfg(!!j.dry_run);
         }).catch(function () {});
       }
       useEffect(function () { load(); }, []);
 
       function save() {
-        const body = { recipient: String(recipient).trim(), threshold_missed_days: Number(threshold), dry_run: !!dry };
+        const body = { recipient: String(recipient).trim(), threshold_missed_days: Number(threshold) };
         fetch(REC + '/config', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
           .then(function (r) { return r.json(); }).then(function () { setMsg(t.savedMsg); load(); }).catch(function () { setMsg(t.failMsg); });
       }
@@ -237,7 +234,7 @@ window.__ModuleLoader__.load({
       }
 
       const maxCount = Math.max(1, hist.reduce(function (m, x) { return Math.max(m, x.count); }, 0));
-      const sendState = dryCfg ? t.stDry : t.stLive;
+      const sendState = recipient ? (t.stLive + ' · ' + recipient) : '…';
       return h('div', { className: 'shih-stats' },
         h('div', { className: 'shih-stat-row' }, h('span', null, t.stToday), h('b', { className: s && s.todayDone ? 'ok' : 'no' }, s ? (s.todayDone ? t.stDone : t.stNotDone) : '…')),
         h('div', { className: 'shih-stat-row' }, h('span', null, t.stStreakTotal), h('b', null, (s ? (s.streak || 0) : '…') + ' ' + t.stDays + ' / ' + (s ? (s.total || 0) : '…') + ' ' + t.stTimes)),
@@ -253,7 +250,6 @@ window.__ModuleLoader__.load({
         h('label', { className: 'shih-field' }, h('span', null, t.stRecipient), h('input', { value: recipient, onChange: function (e) { setRecipient(e.target.value); }, placeholder: 'you@example.com' })),
         h('label', { className: 'shih-field' }, h('span', null, t.stThreshold), h('select', { value: threshold, onChange: function (e) { setThreshold(e.target.value); } },
           h('option', { value: '1' }, '1 ' + t.stDays), h('option', { value: '2' }, '2 ' + t.stDays), h('option', { value: '3' }, '3 ' + t.stDays))),
-        h('label', { className: 'shih-field' }, h('span', null, t.stDryLabel), h('input', { type: 'checkbox', checked: dry, onChange: function (e) { setDry(e.target.checked); } })),
         h('div', { className: 'shih-actions' },
           h('button', { className: 'shih-btn primary', onClick: save }, t.save),
           h('button', { className: 'shih-btn', onClick: pauseToday }, t.pauseToday),

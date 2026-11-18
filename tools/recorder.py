@@ -14,7 +14,7 @@ CONFIG = os.path.join(BASE, "config.json")
 PORT = 8765
 log = ls.setup_logger("recorder", os.path.join(BASE, "recorder.log"))
 
-SAFE_DEFAULTS = {"recipient": "", "threshold_missed_days": 1, "dry_run": True, "check_hour": 22, "pause_date": None}
+SAFE_DEFAULTS = {"recipient": "", "threshold_missed_days": 1, "check_hour": 22, "pause_date": None}
 
 
 def load_config():
@@ -33,7 +33,7 @@ def safe_config():
 def save_config_updates(updates):
     c = load_config()
     changed = False
-    for k in ("recipient", "threshold_missed_days", "dry_run", "check_hour", "pause_date"):
+    for k in ("recipient", "threshold_missed_days", "check_hour", "pause_date"):
         if k not in updates:
             continue
         v = updates[k]
@@ -46,8 +46,6 @@ def save_config_updates(updates):
             elif k == "check_hour":
                 iv = int(v)
                 if 0 <= iv <= 23: c[k] = iv; changed = True
-            elif k == "dry_run" and isinstance(v, bool):
-                c[k] = v; changed = True
             elif k == "pause_date" and (v is None or isinstance(v, str)):
                 c[k] = v; changed = True
         except Exception:

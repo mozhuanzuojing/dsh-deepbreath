@@ -6,7 +6,7 @@
 A DeepSeek Harness (DSH) session-view plugin for a short, guided breathing break — an ambient "Breathe" entry in the session header that opens a paced card.
 
 - **Guided qi-flow breathing**: inhale 6s → hold 1s → exhale 4s (inhale long, exhale short). Inhale visualization: crown (Baihui) → lower Dantian → soles (Yongquan). Exhale: the diaphragm springs up and energy releases from the soles through the Dantian.
-- **Practice / Stats tabs**: a one-tap practice card, plus a stats & settings panel (today, streak, total, 7-day bars; recipient, threshold, dry-run).
+- **Practice / Stats tabs**: a one-tap practice card, plus a stats & settings panel (today, streak, total, 7-day bars; recipient, threshold).
 - **Global shortcut**: `Ctrl/⌘ + Shift + B` opens the card and starts a session.
 - **Local completion recording**: each completed session is posted to a local recorder (`127.0.0.1:8765`) and stored on your machine. If the recorder is not running, completions are queued locally and synced later.
 - **Accessible**: dialog semantics, focus trap, Esc to close, `aria-live` phase guidance, respects `prefers-reduced-motion`, theme-token styling (light/dark).

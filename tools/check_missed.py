@@ -1,6 +1,5 @@
 """每日检查：按"整天算"，当天无完成（且数据源健康）则发提醒邮件到绑定邮箱。
-健壮性：优先向记账服务取权威状态；服务离线回退读账本文件；账本损坏/不可用则不发送（避免误发）。
-dry-run 不占用真实发送名额。
+邮件一律直接发送（无 dry-run）。健壮性：优先向记账服务取权威状态；离线回退读账本；账本损坏/不可用则不发送。
 """
 import os
 import sys
@@ -17,7 +16,6 @@ BASE = os.path.dirname(os.path.abspath(__file__))
 CONFIG_PATH = os.path.join(BASE, "config.json")
 LEDGER_PATH = os.path.join(BASE, "ledger.json")
 STATE_PATH = os.path.join(BASE, "state.json")
-OUTBOX_PATH = os.path.join(BASE, "outbox.log")
 PASSWORD_FILE = os.path.join(BASE, "password.txt")
 ENV_FILE = os.path.join(BASE, ".env")
 log = ls.setup_logger("check", os.path.join(BASE, "check.log"))
@@ -31,7 +29,6 @@ DEFAULTS = {
     "username": "me@example.com",
     "check_hour": 22,
     "threshold_missed_days": 1,
-    "dry_run": True,
     "lang": "zh",
     "recorder_port": 8765,
 }
@@ -55,8 +52,7 @@ def _read_dotenv(path):
 
 
 def get_password():
-    """授权码优先级：环境变量 → .env 文件 → password.txt（兼容旧方式）。
-    建议用 .env / 环境变量，避免像 password.txt 那样明文留在目录里。"""
+    """授权码优先级：环境变量 → .env 文件 → password.txt（兼容旧方式）。"""
     for k in ("DSH_MAIL_PASSWORD", "SHIH_MAIL_PASSWORD", "MAIL_PASSWORD"):
         v = os.environ.get(k)
         if v and v.strip():
@@ -119,24 +115,10 @@ def compose(cfg, missed, today, total):
     return subj, body
 
 
-def send_email(cfg, subj, body, dry_run):
-    if dry_run:
-        record = {
-            "ts": datetime.datetime.now().isoformat(timespec="seconds"),
-            "mode": "DRY-RUN",
-            "to": cfg["recipient"],
-            "from": cfg["sender"],
-            "subject": subj,
-            "body": body,
-        }
-        with open(OUTBOX_PATH, "a", encoding="utf-8") as f:
-            f.write(json.dumps(record, ensure_ascii=False) + "\n")
-        log.info("[DRY-RUN] 本应发送邮件 -> %s（写入 outbox.log，未真正发送）" % cfg["recipient"])
-        return True
-
+def send_email(cfg, subj, body):
     pw = get_password()
     if not pw:
-        log.error("未找到 SMTP 授权码（环境变量 DSH_MAIL_PASSWORD 或 password.txt）")
+        log.error("未找到 SMTP 授权码（环境变量 DSH_MAIL_PASSWORD 或 .env 或 password.txt）")
         return False
     msg = EmailMessage()
     msg["Subject"] = subj
@@ -164,7 +146,6 @@ def send_email(cfg, subj, body, dry_run):
 
 def main():
     cfg = {**DEFAULTS, **load_json(CONFIG_PATH, {})}
-    dry_run = bool(cfg.get("dry_run", True))
     threshold = int(cfg.get("threshold_missed_days", 1))
     today = datetime.date.today()
 
@@ -174,11 +155,8 @@ def main():
 
     okv, reason = validate(cfg)
     if not okv:
-        if dry_run:
-            log.warning("配置不完整(%s)，当前 dry-run 继续仅记录" % reason)
-        else:
-            log.error("配置不完整(%s)，拒绝发送" % reason)
-            return
+        log.error("配置不完整(%s)，拒绝发送" % reason)
+        return
 
     st = fetch_status(cfg.get("recorder_port", 8765))
     if st and st.get("ok"):
@@ -197,8 +175,8 @@ def main():
         missed = s.get("missed")
         total = s.get("total")
 
-    log.info("数据源=%s todayDone=%s missed=%s total=%s threshold=%d dry_run=%s"
-             % (source, today_done, missed, total, threshold, dry_run))
+    log.info("数据源=%s todayDone=%s missed=%s total=%s threshold=%d"
+             % (source, today_done, missed, total, threshold))
 
     if today_done:
         log.info("今天已完成，不发送")
@@ -215,8 +193,8 @@ def main():
         return
 
     subj, body = compose(cfg, missed, today, total)
-    ok = send_email(cfg, subj, body, dry_run)
-    if ok and not dry_run:  # dry-run 不占用真实发送名额（F3）
+    ok = send_email(cfg, subj, body)
+    if ok:
         state["last_notified_date"] = today.isoformat()
         state["last_missed_days"] = missed
         state["last_check"] = datetime.datetime.now().isoformat(timespec="seconds")

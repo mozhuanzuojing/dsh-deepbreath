@@ -21,5 +21,5 @@ body = (
 
 log.info("测试发信 from=%s -> to=%s smtp=%s:%s ssl=%s"
          % (cfg["sender"], to, cfg["smtp_host"], cfg["smtp_port"], cfg["smtp_ssl"]))
-ok = cm.send_email(cfg, subj, body, dry_run=False)
+ok = cm.send_email(cfg, subj, body)
 print("RESULT:", "OK 已发出，请去收件箱查看" if ok else "FAILED，见 check.log / 控制台错误")

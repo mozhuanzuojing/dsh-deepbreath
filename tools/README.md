@@ -17,10 +17,11 @@
    ```
    依次填：发件邮箱、服务商(163/qq/gmail…)、授权码、收件地址、（可选）阈值。
    它会写 `config.json` + `.env`（`DSH_MAIL_PASSWORD=你的授权码`）。
-   - 默认 `dry_run: true`（**只记录不发信**，安全）；确认无误后改 `config.json` 的 `dry_run:false` 或加 `--live` 再跑一次向导。
 3. **验证发信**：`python send_test.py`（真发一封到收件地址，确认能收到）。
 4. **注册计划任务**：`powershell -ExecutionPolicy Bypass -File .\enable_all.ps1`
    - 登录自启「记账服务」+ 每日按 `check_hour`（默认 22:00）检查漏做。
+
+> ⚠ 没有 dry-run：配好后**漏做就会真发**。所以务必先 `send_test.py` 确认收件地址/授权码正确，再启用计划任务。
 
 ## 文件
 - `setup_mail.py` 配置向导；`config.example.json` / `.env.example` 示例

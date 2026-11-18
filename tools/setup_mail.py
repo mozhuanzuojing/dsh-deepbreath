@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """dsh-deepbreath 发件邮箱配置向导（把你的发件邮箱/授权码写到 config.json + .env）。
+邮件会直接发送（无 dry-run）。配置前请确认收件地址正确；可先运行 send_test.py 验证能收到。
 
 用法：
   交互式：  python setup_mail.py
-  参数式：  python setup_mail.py --sender you@163.com --provider 163 --code 你的授权码 --recipient you@163.com --live
+  参数式：  python setup_mail.py --sender you@163.com --provider 163 --code 你的授权码 --recipient you@163.com
 
 安全：
   - 授权码写入同目录 .env（DSH_MAIL_PASSWORD），不要提交到 git、不要外发。
-  - 默认 dry_run=true（只记录不发信）；确认无误加 --live 才真发。
 """
 import os
 import sys
@@ -39,7 +39,6 @@ def main():
     ap.add_argument("--threshold", type=int, default=1, help="连续漏做几天才发，默认 1")
     ap.add_argument("--check-hour", type=int, default=22, help="每天检查时刻 0-23，默认 22")
     ap.add_argument("--smtp-host"); ap.add_argument("--smtp-port", type=int); ap.add_argument("--no-ssl", action="store_true")
-    ap.add_argument("--live", action="store_true", help="真发（dry_run=false）；缺省为安全 dry-run")
     args = ap.parse_args()
 
     sender = args.sender or ask("发件邮箱(你的邮箱地址)")
@@ -61,13 +60,12 @@ def main():
     if not code:
         print("缺少授权码。"); return 2
     recipient = args.recipient or ask("收件地址(漏做提醒发到哪)", sender)
-    dry = not args.live
 
     cfg = {
         "recipient": recipient, "sender": sender,
         "smtp_host": host, "smtp_port": port, "smtp_ssl": ssl, "username": sender,
         "check_hour": args.check_hour, "threshold_missed_days": args.threshold,
-        "dry_run": dry, "lang": "zh", "recorder_port": 8765,
+        "lang": "zh", "recorder_port": 8765,
     }
     d = args.dir
     with open(os.path.join(d, "config.json"), "w", encoding="utf-8") as f:
@@ -77,9 +75,8 @@ def main():
 
     print("已写入: %s" % os.path.join(d, "config.json"))
     print("已写入: %s   (请勿提交 git / 外发)" % os.path.join(d, ".env"))
-    print("发件 %s -> SMTP %s:%s ssl=%s | 收件 %s | dry_run=%s"
-          % (sender, host, port, ssl, recipient, dry))
-    print("下一步：运行 enable_all.ps1 注册计划任务；运行 send_test.py 验证发信；确认后可用 --live 或改 config dry_run=false 真发。")
+    print("发件 %s -> SMTP %s:%s ssl=%s | 收件 %s" % (sender, host, port, ssl, recipient))
+    print("下一步：python send_test.py 验证能收到；再运行 enable_all.ps1 注册计划任务（每日检查并真发）。")
     return 0
 
 

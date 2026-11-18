@@ -7,7 +7,6 @@
   "username": "you@example.com",
   "check_hour": 22,
   "threshold_missed_days": 1,
-  "dry_run": true,
   "lang": "zh",
   "recorder_port": 8765
 }
