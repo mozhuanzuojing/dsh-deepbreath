@@ -17,7 +17,7 @@ This is a DSH bundle. Install it via **Plugins → Add plugin** (choose this dir
 
 ## Notes / limitations
 
-- The in-app plugin only records completions and shows stats. A separate local helper (a tiny recorder + an optional daily "missed-a-day" email job) is intentionally **not** bundled here — this repo contains the DSH plugin only.
+- The in-app plugin only records completions and shows stats. The optional local companion (a tiny recorder + an optional daily "missed-a-day" email job) lives in [`tools/`](tools/README.md) — each user configures their **own** sender mailbox and authorization code (stored in a local `.env`, never committed/shared). See `tools/README.md`.
 - Breathing is a relaxation exercise, **not medical advice**. Do not force or hold your breath; stop if dizzy. If pregnant or with heart/lung/abdominal conditions, consult a doctor first.
 - No session content is read or sent; completions are stored locally.
 
