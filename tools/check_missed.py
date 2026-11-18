@@ -98,7 +98,7 @@ def validate(cfg):
 
 
 def compose(cfg, missed, today, total):
-    subj = "给自己 30 秒 —— 今天还没做呼吸练习"
+    subj = "给自己半分钟 —— 今天还没做呼吸练习"
     if not total:
         done_sentence = "今天还没有记录到呼吸练习。"
     else:
@@ -106,8 +106,8 @@ def compose(cfg, missed, today, total):
     body = (
         "你好，\n\n"
         "提醒一下：%s\n\n"
-        "不用有压力。现在站起来，做 3 次长呼气：\n"
-        "  鼻吸 4 秒 → 嘴呼 6 秒，呼气比吸气长，做 3 次，就 30 秒。\n\n"
+        "不用有压力。现在站起来，做 3 次呼吸：\n"
+        "  鼻吸 6 秒 → 停 1 秒 → 呼 4 秒，做 3 次，约 33 秒。\n\n"
         "做完就关掉这封邮件，回去忙。\n"
         "（这是你自己设置的提醒，可在插件里一键暂停。）\n\n"
         "—— 息"

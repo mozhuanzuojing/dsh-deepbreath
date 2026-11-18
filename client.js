@@ -29,9 +29,9 @@ window.__ModuleLoader__.load({
         ariaClose: '关闭', ariaDialog: '呼吸',
         foot: '别用力、别憋气；头晕手麻即停。孕期/心肺疾病/腹部术后请先问医生。完成会写入本地。',
         footOffline: '⚠ 记账服务离线：本次先存本地、稍后自动补记，不影响呼吸。别用力、头晕即停；孕期/心肺病/腹部术后先问医生。',
-        stToday: '今日', stStreakTotal: '连续 / 累计', stLast: '最近一次', stMissed: '距上次练习', stSend: '发信状态',
-        stDone: '已完成 ✓', stNotDone: '未完成', stTimes: '次', stDays: '天', stDry: '仅记录（不发信）', stLive: '真发', stPause: '已暂停',
-        setTitle: '设置', stRecipient: '收件邮箱', stThreshold: '连续漏做阈值', stDryLabel: '先别真发（dry-run）',
+        stToday: '今日', stStreakTotal: '连续 / 累计', stLast: '最近一次', stMissed: '距上次练习', stSend: '提醒邮箱',
+        stDone: '已完成 ✓', stNotDone: '未完成', stTimes: '次', stDays: '天',
+        setTitle: '设置', stRecipient: '收件邮箱', stThreshold: '连续漏做阈值',
         save: '保存设置', pauseToday: '暂停今天提醒', savedMsg: '已保存 ✓', pausedMsg: '已暂停今天的提醒 ✓', failMsg: '操作失败（记账服务离线？）', refresh: '刷新',
       },
       en: {
@@ -51,15 +51,23 @@ window.__ModuleLoader__.load({
         ariaClose: 'Close', ariaDialog: 'Breathing',
         foot: 'Do not force or hold your breath; stop if dizzy/tingling. If pregnant or with heart/lung/abdominal conditions, consult a doctor first. Completion is saved locally.',
         footOffline: '⚠ Recorder offline: saved locally, will retry. Do not force; stop if dizzy; consult a doctor if pregnant/heart/lung/abdominal.',
-        stToday: 'Today', stStreakTotal: 'Streak / total', stLast: 'Last', stMissed: 'Since last', stSend: 'Email',
-        stDone: 'Done ✓', stNotDone: 'Not yet', stTimes: '', stDays: 'd', stDry: 'Record only (no email)', stLive: 'Live', stPause: 'Paused',
-        setTitle: 'Settings', stRecipient: 'Recipient', stThreshold: 'Miss threshold', stDryLabel: 'Dry-run (don\u2019t send)',
+        stToday: 'Today', stStreakTotal: 'Streak / total', stLast: 'Last', stMissed: 'Since last', stSend: 'Reminder to',
+        stDone: 'Done ✓', stNotDone: 'Not yet', stTimes: '', stDays: 'd',
+        setTitle: 'Settings', stRecipient: 'Recipient', stThreshold: 'Miss threshold',
         save: 'Save', pauseToday: 'Pause today', savedMsg: 'Saved ✓', pausedMsg: 'Paused today\u2019s reminder ✓', failMsg: 'Failed (recorder offline?)', refresh: 'Refresh',
       },
     };
     const t = TXT[LANG];
+    const EXTRA = {
+      aiToast: LANG === 'en' ? 'Waiting on AI — take a 30s breath?' : '在等 AI —— 顺手做一次 30 秒呼吸？',
+      aiGo: LANG === 'en' ? 'Start' : '开始',
+      aiSkip: LANG === 'en' ? 'Skip' : '跳过',
+      dndLabel: LANG === 'en' ? 'Do not disturb' : '勿扰（暂不提醒）',
+    };
 
-    const store = { open: false, view: 'breath', autoStart: false, recOk: null, status: { todayDone: false, streak: 0, total: 0 }, due: false, nextRemindAt: Date.now() + CADENCE_MIN * 60000 };
+    let lastActivity = Date.now();
+    const AI_BUSY_MS = 20000, AI_IDLE_MS = 8000, AI_SKIP_MS = 20 * 60000;
+    const store = { open: false, view: 'breath', autoStart: false, recOk: null, status: { todayDone: false, streak: 0, total: 0 }, due: false, dnd: false, aiNudge: false, aiSkipUntil: 0, nextRemindAt: Date.now() + CADENCE_MIN * 60000 };
     const listeners = new Set();
     function emit() { listeners.forEach(function (f) { try { f(); } catch (e) {} }); }
     function useStore() {
@@ -74,6 +82,8 @@ window.__ModuleLoader__.load({
     function armReminder(min) { store.nextRemindAt = Date.now() + min * 60000; store.due = false; emit(); }
     function openBreath() { store.open = true; store.view = 'breath'; store.due = false; emit(); }
     function openAndStart() { store.open = true; store.view = 'breath'; store.due = false; store.autoStart = true; emit(); }
+    function aiStart() { store.aiNudge = false; emit(); openAndStart(); }
+    function aiSkip() { store.aiNudge = false; store.aiSkipUntil = Date.now() + AI_SKIP_MS; emit(); }
 
     async function refreshStatus() {
       try {
@@ -124,7 +134,7 @@ window.__ModuleLoader__.load({
       '.shih-headerbtn.due{animation:shih-pulse 2.2s ease-in-out infinite;}',
       '.shih-hwrap{display:inline-flex;gap:6px;align-items:center;}',
       '.shih-scrim{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;background:rgba(20,24,22,.28);backdrop-filter:blur(3px);}',
-      '.shih-card{position:relative;width:min(400px,90vw);max-height:90vh;overflow:auto;background:var(--dsw-alias-bg-overlay,#fff);border:1px solid var(--dsw-alias-border-l1,#e6e3db);border-radius:16px;padding:22px 22px 18px;box-shadow:0 10px 30px rgba(0,0,0,.18);text-align:center;color:var(--dsw-alias-label-primary,#2b2a26);font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;outline:none;}',
+      '.shih-card{position:relative;width:min(600px,90vw);max-height:90vh;overflow:auto;background:var(--dsw-alias-bg-overlay,#fff);border:1px solid var(--dsw-alias-border-l1,#e6e3db);border-radius:16px;padding:22px 22px 18px;box-shadow:0 10px 30px rgba(0,0,0,.18);text-align:center;color:var(--dsw-alias-label-primary,#2b2a26);font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;outline:none;}',
       '.shih-x{position:absolute;top:10px;right:14px;border:none;background:none;font-size:20px;color:var(--dsw-alias-label-secondary,#8a857a);cursor:pointer;}',
       '.shih-tabs{display:flex;gap:6px;justify-content:center;margin-bottom:12px;}',
       '.shih-tab{border:1px solid var(--dsw-alias-border-l1,#e6e3db);background:var(--dsw-alias-bg-layer-1,#fff);color:var(--dsw-alias-label-secondary,#6f6a60);font-size:13px;padding:5px 14px;border-radius:8px;cursor:pointer;font-family:inherit;}',
@@ -158,12 +168,16 @@ window.__ModuleLoader__.load({
       '.shih-hbar span{font-size:9px;color:var(--dsw-alias-label-secondary,#9a9488);}',
       '.shih-sec-title{font-weight:600;margin:14px 0 4px;font-size:12px;color:var(--dsw-alias-label-secondary,#6f6a60);}',
       '.shih-field{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 2px;font-size:12.5px;color:var(--dsw-alias-label-primary,#2b2a26);}',
-      '.shih-field input:not([type=checkbox]),.shih-field select{border:1px solid var(--dsw-alias-border-l1,#e6e3db);background:var(--dsw-alias-bg-layer-1,#fff);border-radius:8px;padding:5px 8px;font-size:12.5px;color:inherit;font-family:inherit;min-width:140px;}',
+      '.shih-field input:not([type=checkbox]),.shih-field select{border:1px solid var(--dsw-alias-border-l1,#e6e3db);background:var(--dsw-alias-bg-layer-1,#fff);border-radius:8px;padding:5px 8px;font-size:12.5px;color:inherit;font-family:inherit;min-width:200px;}',
       '.shih-field input[type=checkbox]{min-width:auto;width:auto;}',
       '.shih-msg{font-size:11.5px;color:var(--dsw-alias-state-success-primary,#1f9d6b);margin-top:8px;text-align:center;}',
       '@media (prefers-reduced-motion: reduce){.shih-pill.due,.shih-headerbtn.due{animation:none;} .shih-pacer{transition:none;}}',
       '.shih-hint{display:flex;gap:8px;align-items:center;justify-content:space-between;background:rgba(47,143,122,.10);border:1px solid rgba(47,143,122,.25);border-radius:10px;padding:8px 10px;margin-bottom:10px;font-size:11.5px;color:var(--dsw-alias-label-secondary,#5c574d);text-align:left;line-height:1.5;}',
       '.shih-hint-x{border:none;background:var(--dsw-alias-brand-primary,#2f8f7a);color:#fff;border-radius:7px;padding:4px 10px;font-size:11.5px;cursor:pointer;white-space:nowrap;flex:0 0 auto;}',
+      '.shih-toast{position:fixed;right:18px;bottom:18px;z-index:60;display:flex;align-items:center;gap:8px;background:var(--dsw-alias-bg-layer-1,#fff);border:1px solid var(--dsw-alias-brand-primary,#2f8f7a);border-radius:12px;padding:10px 12px;box-shadow:0 6px 24px rgba(0,0,0,.16);max-width:330px;text-align:left;}',
+      '.shih-toast-t{font-size:12.5px;color:var(--dsw-alias-label-primary,#2b2a26);line-height:1.35;}',
+      '.shih-toast-b{border:none;background:transparent;color:var(--dsw-alias-label-secondary,#6f6a60);border-radius:7px;padding:5px 9px;font-size:12px;cursor:pointer;font-family:inherit;white-space:nowrap;}',
+      '.shih-toast-b.primary{background:var(--dsw-alias-brand-primary,#2f8f7a);color:#fff;}',
     ].join('');
 
     function Styles() { return h('style', { dangerouslySetInnerHTML: { __html: CSS } }); }
@@ -181,23 +195,51 @@ window.__ModuleLoader__.load({
       }
     }
 
-    function HeaderButtons() {
+    function HeaderButtons(props) {
       useStore();
+      let running = false;
+      try {
+        if (props && typeof props.useSessionStatus === 'function') {
+          running = !!props.useSessionStatus(function (m) {
+            const sid = props.sessionId;
+            const v = sid != null ? m.get(sid) : undefined;
+            return !!(v && v.running);
+          });
+        }
+      } catch (e) { running = false; }
       useEffect(function () {
+        try { store.dnd = localStorage.getItem('shih.dnd') === '1'; } catch (e) {}
         refreshStatus(); flushQueue();
         const tt = setInterval(refreshStatus, 60000);
         return function () { clearInterval(tt); if (store.open) { store.open = false; emit(); } };
       }, []);
       useEffect(function () {
         const tt = setInterval(function () {
+          if (store.dnd) return;
           if (store.recOk === false) return;
           if (store.status && store.status.todayDone) { if (store.due) { store.due = false; emit(); } return; }
           if (Date.now() >= store.nextRemindAt && !store.due) { store.due = true; emit(); }
         }, 15000);
         return function () { clearInterval(tt); };
       }, []);
+      const busySinceRef = useRef(0);
+      useEffect(function () {
+        if (running) { if (!busySinceRef.current) busySinceRef.current = Date.now(); }
+        else { busySinceRef.current = 0; if (store.aiNudge) { store.aiNudge = false; emit(); } }
+      }, [running]);
+      useEffect(function () {
+        if (!running) return;
+        const tt = setInterval(function () {
+          if (store.dnd || store.open || store.aiNudge || store.recOk === false) return;
+          if (store.status && store.status.todayDone) return;
+          if (Date.now() < store.aiSkipUntil) return;
+          const busyMs = busySinceRef.current ? (Date.now() - busySinceRef.current) : 0;
+          if (busyMs >= AI_BUSY_MS && (Date.now() - lastActivity) >= AI_IDLE_MS) { store.aiNudge = true; emit(); }
+        }, 2000);
+        return function () { clearInterval(tt); };
+      }, [running]);
       const s = store.status || {};
-      const done = !!s.todayDone, offline = store.recOk === false, due = store.due && !done && !offline;
+      const done = !!s.todayDone, offline = store.recOk === false, due = store.due && !done && !offline && !store.dnd;
       let cls = 'shih-headerbtn';
       if (done) cls += ' done'; else if (due) cls += ' due';
       return h(React.Fragment, null, h(Styles),
@@ -210,6 +252,7 @@ window.__ModuleLoader__.load({
       const [recipient, setRecipient] = useState('');
       const [threshold, setThreshold] = useState('1');
       const [msg, setMsg] = useState('');
+      const [dnd, setDnd] = useState(!!store.dnd);
 
       function load() {
         fetch(REC + '/status').then(function (r) { return r.json(); }).then(setS).catch(function () {});
@@ -234,7 +277,7 @@ window.__ModuleLoader__.load({
       }
 
       const maxCount = Math.max(1, hist.reduce(function (m, x) { return Math.max(m, x.count); }, 0));
-      const sendState = recipient ? (t.stLive + ' · ' + recipient) : '…';
+      const sendState = recipient ? recipient : '…';
       return h('div', { className: 'shih-stats' },
         h('div', { className: 'shih-stat-row' }, h('span', null, t.stToday), h('b', { className: s && s.todayDone ? 'ok' : 'no' }, s ? (s.todayDone ? t.stDone : t.stNotDone) : '…')),
         h('div', { className: 'shih-stat-row' }, h('span', null, t.stStreakTotal), h('b', null, (s ? (s.streak || 0) : '…') + ' ' + t.stDays + ' / ' + (s ? (s.total || 0) : '…') + ' ' + t.stTimes)),
@@ -250,6 +293,7 @@ window.__ModuleLoader__.load({
         h('label', { className: 'shih-field' }, h('span', null, t.stRecipient), h('input', { value: recipient, onChange: function (e) { setRecipient(e.target.value); }, placeholder: 'you@example.com' })),
         h('label', { className: 'shih-field' }, h('span', null, t.stThreshold), h('select', { value: threshold, onChange: function (e) { setThreshold(e.target.value); } },
           h('option', { value: '1' }, '1 ' + t.stDays), h('option', { value: '2' }, '2 ' + t.stDays), h('option', { value: '3' }, '3 ' + t.stDays))),
+        h('label', { className: 'shih-field' }, h('span', null, EXTRA.dndLabel), h('input', { type: 'checkbox', checked: dnd, onChange: function (e) { setDnd(e.target.checked); store.dnd = e.target.checked; try { localStorage.setItem('shih.dnd', e.target.checked ? '1' : '0'); } catch (_) {} emit(); } })),
         h('div', { className: 'shih-actions' },
           h('button', { className: 'shih-btn primary', onClick: save }, t.save),
           h('button', { className: 'shih-btn', onClick: pauseToday }, t.pauseToday),
@@ -337,7 +381,16 @@ window.__ModuleLoader__.load({
       function snooze() { close(); armReminder(SNOOZE_MIN); }
       function setView(v) { store.view = v; emit(); }
 
-      if (!store.open) return null;
+      if (!store.open) {
+        if (store.aiNudge) {
+          return h(React.Fragment, null, h(Styles),
+            h('div', { className: 'shih-toast', role: 'status' },
+              h('span', { className: 'shih-toast-t' }, EXTRA.aiToast),
+              h('button', { className: 'shih-toast-b primary', onClick: aiStart }, EXTRA.aiGo),
+              h('button', { className: 'shih-toast-b', onClick: aiSkip }, EXTRA.aiSkip)));
+        }
+        return null;
+      }
       const view = run ? 'breath' : (store.view || 'breath');
       const offline = store.recOk === false;
       let cue;
@@ -382,7 +435,7 @@ window.__ModuleLoader__.load({
       );
     }
 
-    function wrap(Comp) { return function () { return h(ErrorBoundary, null, h(Comp)); }; }
+    function wrap(Comp) { return function (props) { return h(ErrorBoundary, null, h(Comp, props)); }; }
 
     return {
       inject: ['slots'],
@@ -397,6 +450,18 @@ window.__ModuleLoader__.load({
             ctx.effect(function () { document.addEventListener('keydown', onKey, true); return function () { document.removeEventListener('keydown', onKey, true); }; });
           } else {
             document.addEventListener('keydown', onKey, true);
+          }
+        } catch (e) {}
+        try {
+          const mark = function () { lastActivity = Date.now(); };
+          const evs = ['pointerdown', 'keydown', 'mousemove', 'wheel', 'touchstart'];
+          if (ctx.effect) {
+            ctx.effect(function () {
+              evs.forEach(function (ev) { document.addEventListener(ev, mark, { passive: true, capture: true }); });
+              return function () { evs.forEach(function (ev) { document.removeEventListener(ev, mark, { capture: true }); }); };
+            });
+          } else {
+            evs.forEach(function (ev) { document.addEventListener(ev, mark, { passive: true, capture: true }); });
           }
         } catch (e) {}
         ctx.slots.inject('conversation.session.header.utilities', function () {
