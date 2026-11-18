@@ -1,6 +1,6 @@
 {
   "name": "dsh-deepbreath",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "description": "A DeepSeek Harness (DSH) session-view plugin for a short guided breathing break (practice + stats).",
   "keywords": ["dsh", "deepseek-harness", "dsh-plugin", "plugin", "breathing", "mindfulness", "qigong"],
   "private": true,
