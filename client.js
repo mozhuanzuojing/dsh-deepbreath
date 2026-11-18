@@ -59,7 +59,7 @@ window.__ModuleLoader__.load({
     };
     const t = TXT[LANG];
     const EXTRA = {
-      aiToast: LANG === 'en' ? 'Waiting on AI — take a 30s breath?' : '在等 AI —— 顺手做一次 30 秒呼吸？',
+      aiToast: LANG === 'en' ? 'Waiting on AI — take a ~33s breath?' : '在等 AI —— 顺手呼吸一下（约 33 秒）？',
       aiGo: LANG === 'en' ? 'Start' : '开始',
       aiSkip: LANG === 'en' ? 'Skip' : '跳过',
       dndLabel: LANG === 'en' ? 'Do not disturb' : '勿扰（暂不提醒）',
@@ -80,9 +80,9 @@ window.__ModuleLoader__.load({
       return store;
     }
     function armReminder(min) { store.nextRemindAt = Date.now() + min * 60000; store.due = false; emit(); }
-    function openBreath() { store.open = true; store.view = 'breath'; store.due = false; emit(); }
-    function openAndStart() { store.open = true; store.view = 'breath'; store.due = false; store.autoStart = true; emit(); }
-    function aiStart() { store.aiNudge = false; emit(); openAndStart(); }
+    function openBreath() { store.open = true; store.view = 'breath'; store.due = false; store.aiNudge = false; emit(); }
+    function openAndStart() { store.open = true; store.view = 'breath'; store.due = false; store.aiNudge = false; store.autoStart = true; emit(); }
+    function aiStart() { store.aiNudge = false; store.aiSkipUntil = Date.now() + AI_SKIP_MS; emit(); openAndStart(); }
     function aiSkip() { store.aiNudge = false; store.aiSkipUntil = Date.now() + AI_SKIP_MS; emit(); }
 
     async function refreshStatus() {
@@ -98,7 +98,7 @@ window.__ModuleLoader__.load({
       try {
         const r = await fetch(REC + '/done', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
         if (!r.ok) throw new Error('bad');
-        store.status = await r.json(); store.recOk = true; emit(); return true;
+        let j = null; try { j = await r.json(); } catch (_) {} store.recOk = true; if (j) store.status = j; emit(); return true;
       } catch (e) {
         store.recOk = false;
         try { const q = JSON.parse(localStorage.getItem('shih.queue') || '[]'); q.push(payload); localStorage.setItem('shih.queue', JSON.stringify(q)); } catch (_) {}
@@ -197,21 +197,16 @@ window.__ModuleLoader__.load({
 
     function HeaderButtons(props) {
       useStore();
-      let running = false;
-      try {
-        if (props && typeof props.useSessionStatus === 'function') {
-          running = !!props.useSessionStatus(function (m) {
-            const sid = props.sessionId;
-            const v = sid != null ? m.get(sid) : undefined;
-            return !!(v && v.running);
-          });
-        }
-      } catch (e) { running = false; }
+      const sid = props.sessionId;
+      const running = !!props.useSessionStatus(function (m) {
+        const v = sid != null ? m.get(sid) : undefined;
+        return !!(v && v.running);
+      });
       useEffect(function () {
         try { store.dnd = localStorage.getItem('shih.dnd') === '1'; } catch (e) {}
         refreshStatus(); flushQueue();
         const tt = setInterval(refreshStatus, 60000);
-        return function () { clearInterval(tt); if (store.open) { store.open = false; emit(); } };
+        return function () { clearInterval(tt); if (store.open) { store.open = false; } if (store.aiNudge) { store.aiNudge = false; } emit(); };
       }, []);
       useEffect(function () {
         const tt = setInterval(function () {
@@ -287,13 +282,13 @@ window.__ModuleLoader__.load({
         h('div', { className: 'shih-hist' }, hist.map(function (x, i) {
           return h('div', { key: i, className: 'shih-hbar' + (x.done ? ' on' : '') },
             h('i', { style: { height: (6 + (x.count / maxCount) * 40) + 'px' } }),
-            h('span', null, x.date.slice(5)));
+            h('span', null, String(x.date || '').slice(5)));
         })),
         h('div', { className: 'shih-sec-title' }, t.setTitle),
         h('label', { className: 'shih-field' }, h('span', null, t.stRecipient), h('input', { value: recipient, onChange: function (e) { setRecipient(e.target.value); }, placeholder: 'you@example.com' })),
         h('label', { className: 'shih-field' }, h('span', null, t.stThreshold), h('select', { value: threshold, onChange: function (e) { setThreshold(e.target.value); } },
           h('option', { value: '1' }, '1 ' + t.stDays), h('option', { value: '2' }, '2 ' + t.stDays), h('option', { value: '3' }, '3 ' + t.stDays))),
-        h('label', { className: 'shih-field' }, h('span', null, EXTRA.dndLabel), h('input', { type: 'checkbox', checked: dnd, onChange: function (e) { setDnd(e.target.checked); store.dnd = e.target.checked; try { localStorage.setItem('shih.dnd', e.target.checked ? '1' : '0'); } catch (_) {} emit(); } })),
+        h('label', { className: 'shih-field' }, h('span', null, EXTRA.dndLabel), h('input', { type: 'checkbox', checked: dnd, onChange: function (e) { setDnd(e.target.checked); store.dnd = e.target.checked; if (e.target.checked) store.aiNudge = false; try { localStorage.setItem('shih.dnd', e.target.checked ? '1' : '0'); } catch (_) {} emit(); } })),
         h('div', { className: 'shih-actions' },
           h('button', { className: 'shih-btn primary', onClick: save }, t.save),
           h('button', { className: 'shih-btn', onClick: pauseToday }, t.pauseToday),
@@ -322,6 +317,9 @@ window.__ModuleLoader__.load({
       useEffect(function () {
         if (store.open && store.autoStart) { store.autoStart = false; if (!run && !saved) start(); }
       }, [store.open, store.autoStart]);
+      useEffect(function () {
+        if (!store.open && run) { setRun(false); setPhase('idle'); setNum(0); setBreaths(0); }
+      }, [store.open, run]);
 
       useEffect(function () {
         if (!store.open) return;
@@ -382,7 +380,7 @@ window.__ModuleLoader__.load({
       function setView(v) { store.view = v; emit(); }
 
       if (!store.open) {
-        if (store.aiNudge) {
+        if (store.aiNudge && !store.dnd) {
           return h(React.Fragment, null, h(Styles),
             h('div', { className: 'shih-toast', role: 'status' },
               h('span', { className: 'shih-toast-t' }, EXTRA.aiToast),

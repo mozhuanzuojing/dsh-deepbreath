@@ -8,7 +8,7 @@ A DeepSeek Harness (DSH) session-view plugin for a short, guided breathing break
 - **Guided qi-flow breathing**: inhale 6s → hold 1s → exhale 4s (inhale long, exhale short). Inhale visualization: crown (Baihui) → lower Dantian → soles (Yongquan). Exhale: the diaphragm springs up and energy releases from the soles through the Dantian.
 - **Practice / Stats tabs**: a one-tap practice card, plus a stats & settings panel (today, streak, total, 7-day bars; recipient, threshold).
 - **Global shortcut**: `Ctrl/⌘ + Shift + B` opens the card and starts a session.
-- **Wait-for-AI nudge (event-driven)**: when the assistant is generating (`SessionStatus.running`) and you have been idle a few seconds, a small non-blocking "take a 30s breath?" toast appears (Start / Skip); it auto-dismisses when the answer is ready. A fixed cadence + pre-break pulse also remain.
+- **Wait-for-AI nudge (event-driven)**: when the assistant is generating (`SessionStatus.running`) and you have been idle a few seconds, a small non-blocking "take a ~33s breath?" toast appears (Start / Skip); it auto-dismisses when the answer is ready. A fixed cadence + pre-break pulse also remain.
 - **Do not disturb**: a toggle in the Stats panel pauses all reminders.
 - **Local completion recording**: each completed session is posted to a local recorder (`127.0.0.1:8765`) and stored on your machine. If the recorder is not running, completions are queued locally and synced later.
 - **Accessible**: dialog semantics, focus trap, Esc to close, `aria-live` phase guidance, respects `prefers-reduced-motion`, theme-token styling (light/dark).
