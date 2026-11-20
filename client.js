@@ -6,7 +6,7 @@ window.__ModuleLoader__.load({
     const { useState, useEffect, useRef } = React;
 
     const REC = 'http://127.0.0.1:8765';
-    const CADENCE_MIN = 15;
+    const DEFAULT_CADENCE_MIN = 15;
     const SNOOZE_MIN = 15;
     const REDUCE = (typeof window !== 'undefined' && window.matchMedia)
       ? window.matchMedia('(prefers-reduced-motion: reduce)').matches : false;
@@ -69,11 +69,15 @@ window.__ModuleLoader__.load({
       hbOff: LANG === 'en' ? 'Offline' : '离线',
       end: LANG === 'en' ? 'End' : '结束',
       stEmailBad: LANG === 'en' ? 'Invalid email format' : '邮箱格式不正确',
+      stInterval: LANG === 'en' ? 'Reminder every' : '提醒间隔',
+      unitMin: LANG === 'en' ? 'min' : '分钟',
     };
 
     let lastActivity = Date.now();
     const AI_BUSY_MS = 20000, AI_IDLE_MS = 8000, AI_SKIP_MS = 20 * 60000;
-    const store = { open: false, view: 'breath', autoStart: false, recOk: null, status: { todayDone: false, streak: 0, total: 0 }, due: false, dnd: false, aiNudge: false, aiSkipUntil: 0, nextRemindAt: Date.now() + CADENCE_MIN * 60000 };
+    let _cadence = DEFAULT_CADENCE_MIN;
+    try { var _c = parseInt(localStorage.getItem('shih.cadence'), 10); if (_c > 0 && _c <= 240) _cadence = _c; } catch (e) {}
+    const store = { open: false, view: 'breath', autoStart: false, recOk: null, status: { todayDone: false, streak: 0, total: 0 }, due: false, dnd: false, aiNudge: false, aiSkipUntil: 0, cadenceMin: _cadence, nextRemindAt: Date.now() + _cadence * 60000 };
     const listeners = new Set();
     function emit() { listeners.forEach(function (f) { try { f(); } catch (e) {} }); }
     function useStore() {
@@ -86,6 +90,12 @@ window.__ModuleLoader__.load({
       return store;
     }
     function armReminder(min) { store.nextRemindAt = Date.now() + min * 60000; store.due = false; emit(); }
+    function applyCadence(min) {
+      var m = parseInt(min, 10); if (!(m > 0) || m > 240) m = DEFAULT_CADENCE_MIN;
+      store.cadenceMin = m;
+      try { localStorage.setItem('shih.cadence', String(m)); } catch (e) {}
+      armReminder(m);
+    }
     function openBreath() { store.open = true; store.view = 'breath'; store.due = false; store.aiNudge = false; emit(); }
     function openAndStart() { store.open = true; store.view = 'breath'; store.due = false; store.aiNudge = false; store.autoStart = true; emit(); }
     function aiStart() { store.aiNudge = false; store.aiSkipUntil = Date.now() + AI_SKIP_MS; emit(); openAndStart(); }
@@ -271,6 +281,7 @@ window.__ModuleLoader__.load({
       const [threshold, setThreshold] = useState('1');
       const [msg, setMsg] = useState('');
       const [dnd, setDnd] = useState(!!store.dnd);
+      const [cadence, setCadenceLocal] = useState(store.cadenceMin);
       const [err, setErr] = useState(false);
       const [showSettings, setShowSettings] = useState(false);
 
@@ -318,6 +329,8 @@ window.__ModuleLoader__.load({
           h('label', { className: 'shih-field' }, h('span', null, t.stRecipient), h('input', { value: recipient, onChange: function (e) { setRecipient(e.target.value); }, placeholder: 'you@example.com' })),
           h('label', { className: 'shih-field' }, h('span', null, t.stThreshold), h('select', { value: threshold, onChange: function (e) { setThreshold(e.target.value); } },
             h('option', { value: '1' }, '1 ' + t.stDays), h('option', { value: '2' }, '2 ' + t.stDays), h('option', { value: '3' }, '3 ' + t.stDays))),
+          h('label', { className: 'shih-field' }, h('span', null, EXTRA.stInterval), h('select', { value: String(cadence), onChange: function (e) { setCadenceLocal(e.target.value); applyCadence(e.target.value); } },
+            h('option', { value: '15' }, '15 ' + EXTRA.unitMin), h('option', { value: '30' }, '30 ' + EXTRA.unitMin), h('option', { value: '45' }, '45 ' + EXTRA.unitMin), h('option', { value: '60' }, '60 ' + EXTRA.unitMin))),
           h('label', { className: 'shih-field' }, h('span', null, EXTRA.dndLabel), h('input', { type: 'checkbox', checked: dnd, onChange: function (e) { setDnd(e.target.checked); store.dnd = e.target.checked; if (e.target.checked) store.aiNudge = false; try { localStorage.setItem('shih.dnd', e.target.checked ? '1' : '0'); } catch (_) {} emit(); } })),
           h('div', { className: 'shih-actions', style: { marginTop: '10px' } },
             h('button', { className: 'shih-btn primary', onClick: save }, t.save),
@@ -468,7 +481,7 @@ window.__ModuleLoader__.load({
         h('div', { className: 'shih-cue', key: 'cu', 'aria-live': 'polite' }, cue),
         h('div', { className: 'shih-dots', key: 'do' }, [0, 1, 2].map(function (i) { return h('i', { key: i, className: i < breaths ? 'on' : '' }); })),
         saved
-          ? h('div', { className: 'shih-actions', key: 'ac' }, h('button', { className: 'shih-btn primary', onClick: function () { close(); armReminder(CADENCE_MIN); } }, t.done))
+          ? h('div', { className: 'shih-actions', key: 'ac' }, h('button', { className: 'shih-btn primary', onClick: function () { close(); armReminder(store.cadenceMin); } }, t.done))
           : run
             ? h('div', { className: 'shih-actions', key: 'ac' }, h('button', { className: 'shih-btn', onClick: close }, EXTRA.end))
             : h('div', { className: 'shih-actions', key: 'ac' },
