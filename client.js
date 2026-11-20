@@ -6,7 +6,7 @@ window.__ModuleLoader__.load({
     const { useState, useEffect, useRef } = React;
 
     const REC = 'http://127.0.0.1:8765';
-    const CADENCE_MIN = 30;
+    const CADENCE_MIN = 15;
     const SNOOZE_MIN = 15;
     const REDUCE = (typeof window !== 'undefined' && window.matchMedia)
       ? window.matchMedia('(prefers-reduced-motion: reduce)').matches : false;
