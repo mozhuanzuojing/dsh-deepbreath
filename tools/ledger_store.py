@@ -138,6 +138,22 @@ def streak(done, today):
     return n
 
 
+def longest_streak(done):
+    """历史上最长的连续天数（只增不减的锚，跨全部历史，不受窗口截断）。"""
+    if not done:
+        return 0
+    ds = sorted(done)
+    best = cur = 1
+    for i in range(1, len(ds)):
+        if (ds[i] - ds[i - 1]).days == 1:
+            cur += 1
+        else:
+            cur = 1
+        if cur > best:
+            best = cur
+    return best
+
+
 def append_completion(path, ts=None, dedupe_key=None, max_ids=2000):
     """加锁 + 原子追加一条完成；dedupe_key 命中则视为重复不追加。返回 (data, added)。"""
     with file_lock(path):
@@ -176,6 +192,7 @@ def summary(path):
         "ok": True,
         "todayDone": today_done,
         "streak": streak(done, today),
+        "longest": longest_streak(done),
         "total": len(done),
         "last": max(done).isoformat() if done else None,
         "missed": mis,

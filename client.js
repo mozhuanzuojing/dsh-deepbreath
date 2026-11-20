@@ -68,6 +68,7 @@ window.__ModuleLoader__.load({
       hbDue: LANG === 'en' ? 'Breathe now' : '到点·呼吸',
       hbOff: LANG === 'en' ? 'Offline' : '离线',
       end: LANG === 'en' ? 'End' : '结束',
+      stEmailBad: LANG === 'en' ? 'Invalid email format' : '邮箱格式不正确',
     };
 
     let lastActivity = Date.now();
@@ -124,73 +125,80 @@ window.__ModuleLoader__.load({
     }
 
     const CSS = [
-      '.shih-card{--sh-ink:#2b2a26;--sh-sub:#5a4f3d;--sh-line:rgba(43,42,38,.16);--sh-accent:#a23b2a;--sh-accent-fg:#f7f2e6;--sh-glow:rgba(176,140,84,.22);--sh-serif:"Source Han Serif SC","Songti SC","Noto Serif SC","STSong",Georgia,serif;--sh-paper:radial-gradient(120% 100% at 50% 0%,#fdfaf2,#f6f0e3 70%,#efe6d6 100%);--sh-orb:radial-gradient(circle at 40% 36%,#6a6350,#40392d 60%,#2a251d 100%);--sh-orb-fg:#f7f2e6;--sh-btn-bg:#2b2a26;--sh-btn-fg:#f7f2e6;position:relative;width:min(600px,92vw);max-height:90vh;overflow:auto;background:var(--sh-paper);border:1px solid rgba(90,70,40,.28);border-radius:22px;padding:30px 30px 22px;box-shadow:0 22px 60px rgba(70,55,30,.20);text-align:center;color:var(--sh-ink);font-family:var(--sh-serif);outline:none;}',
-      '.shih-scrim{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;background:rgba(30,25,16,.20);backdrop-filter:blur(6px);}',
-      '.shih-x{position:absolute;top:12px;right:16px;border:none;background:none;font-size:22px;line-height:1;color:var(--sh-sub);cursor:pointer;}',
-      '.shih-tabs{display:flex;gap:22px;justify-content:center;margin:2px 0 18px;}',
-      '.shih-tab{border:none;background:none;color:var(--sh-sub);font-size:13.5px;letter-spacing:.18em;padding:4px 2px;cursor:pointer;font-family:var(--sh-serif);border-bottom:2px solid transparent;}',
-      '.shih-tab.on{color:var(--sh-accent);border-bottom-color:var(--sh-accent);}',
-      '.shih-eb{font-family:-apple-system,"PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif;font-size:11px;letter-spacing:.34em;color:var(--sh-accent);}',
-      '.shih-title{font-size:26px;margin:8px 0 2px;font-weight:600;letter-spacing:.12em;}',
-      '.shih-sub{font-family:-apple-system,"PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif;font-size:12.5px;letter-spacing:.16em;color:var(--sh-sub);margin-bottom:6px;}',
+      '.shih-card{--ink:#171716;--sub:#6b6b66;--line:#e6e5e0;--accent:#b5482f;--accent-fg:#ffffff;--bg:#fbfbf9;--panel:#ffffff;--btn:#171716;--btn-fg:#ffffff;--sans:-apple-system,"PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif;position:relative;width:min(600px,92vw);max-height:90vh;overflow:auto;background:var(--bg);border:1px solid var(--line);border-radius:16px;padding:26px 26px 20px;box-shadow:0 18px 44px rgba(0,0,0,.10);text-align:center;color:var(--ink);font-family:var(--sans);outline:none;}',
+      '.shih-scrim{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.28);backdrop-filter:blur(4px);}',
+      '.shih-x{position:absolute;top:12px;right:16px;border:none;background:none;font-size:22px;line-height:1;color:var(--sub);cursor:pointer;}',
+      '.shih-tabs{display:flex;gap:26px;justify-content:center;margin:2px 0 18px;}',
+      '.shih-tab{border:none;background:none;color:var(--sub);font-size:13.5px;padding:4px 2px;cursor:pointer;font-family:var(--sans);border-bottom:2px solid transparent;}',
+      '.shih-tab.on{color:var(--ink);border-bottom-color:var(--ink);}',
+      '.shih-eb{font-size:11px;letter-spacing:.22em;color:var(--sub);}',
+      '.shih-title{font-size:26px;margin:8px 0 2px;font-weight:600;letter-spacing:.02em;}',
+      '.shih-sub{font-size:12.5px;color:var(--sub);margin-bottom:6px;}',
       '.shih-stage{position:relative;height:220px;display:flex;align-items:center;justify-content:center;margin:8px 0;}',
-      '.shih-glow{position:absolute;width:128px;height:128px;border-radius:50%;transform:scale(1.1);background:radial-gradient(circle,var(--sh-glow),rgba(0,0,0,0) 62%);will-change:transform;}',
-      '.shih-pacer{width:134px;height:134px;border-radius:50%;transform:scale(.9);background:radial-gradient(circle at 40% 34%,#fffef9 0%,#ffeccb 38%,#f3d49b 68%,#e9c07f 86%,rgba(233,192,127,0) 100%);box-shadow:0 0 0 1px rgba(162,59,42,.20),0 8px 22px rgba(120,90,50,.22),inset 0 3px 10px rgba(255,255,255,.92),inset 0 -10px 20px rgba(200,150,90,.28);will-change:transform;}',
+      '.shih-glow{display:none;}',
+      '.shih-pacer{width:120px;height:120px;border-radius:50%;background:radial-gradient(circle at 42% 36%,#ffffff,#f1f0ec 60%,#e7e6e1);border:1px solid var(--line);box-shadow:inset 0 2px 8px rgba(255,255,255,.9),0 10px 26px rgba(0,0,0,.07);will-change:transform;}',
       '.shih-phaselabel{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:2;display:flex;flex-direction:column;align-items:center;gap:2px;pointer-events:none;}',
-      '.shih-plabel-num{font-family:var(--sh-serif);font-size:16px;font-weight:600;line-height:1;color:#5a4f3d;margin-top:3px;}',
-      '.shih-plabel-phase{font-family:var(--sh-serif);font-size:18px;letter-spacing:.2em;text-indent:.2em;color:#241f18;}',
-      '.shih-plabel-phase.big{font-size:22px;letter-spacing:.28em;text-indent:.28em;color:#241f18;}',
-      '.shih-phase{font-family:var(--sh-serif);font-size:22px;letter-spacing:.28em;text-indent:.28em;}',
-      '.shih-num{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;font-size:13px;font-weight:300;opacity:.7;margin-top:2px;}',
-      '.shih-cue{font-size:13px;letter-spacing:.12em;color:var(--sh-sub);line-height:1.7;min-height:40px;margin:6px 0;}',
-      '.shih-dots{display:flex;gap:9px;justify-content:center;margin:10px 0 16px;}',
-      '.shih-dots i{width:7px;height:7px;border-radius:50%;background:var(--sh-line);}',
-      '.shih-dots i.on{background:var(--sh-accent);}',
+      '.shih-plabel-phase{font-size:18px;font-weight:600;color:var(--ink);letter-spacing:.04em;}',
+      '.shih-plabel-num{font-size:15px;color:var(--sub);font-variant-numeric:tabular-nums;}',
+      '.shih-plabel-phase.big{font-size:22px;letter-spacing:.08em;}',
+      '.shih-cue{font-size:13px;color:var(--sub);line-height:1.6;min-height:40px;margin:6px 0;}',
+      '.shih-dots{display:flex;gap:8px;justify-content:center;margin:10px 0 16px;}',
+      '.shih-dots i{width:7px;height:7px;border-radius:50%;background:var(--line);}',
+      '.shih-dots i.on{background:var(--accent);}',
       '.shih-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}',
-      '.shih-btn{border:1px solid var(--sh-line);background:transparent;border-radius:10px;padding:10px 20px;font-size:13.5px;letter-spacing:.1em;color:var(--sh-sub);cursor:pointer;font-family:var(--sh-serif);}',
-      '.shih-btn:hover{border-color:var(--sh-accent);color:var(--sh-accent);}',
-      '.shih-btn.primary{background:var(--sh-btn-bg);border-color:var(--sh-btn-bg);color:var(--sh-btn-fg);}',
-      '.shih-btn.primary:hover{opacity:.9;color:var(--sh-btn-fg);border-color:var(--sh-btn-bg);}',
-      '.shih-btn.primary:disabled{opacity:.55;cursor:default;}',
-      '.shih-x:focus-visible,.shih-headerbtn:focus-visible,.shih-tab:focus-visible,.shih-btn:focus-visible{outline:2px solid var(--sh-accent,#a23b2a);outline-offset:2px;}',
-      '.shih-foot{font-family:-apple-system,"PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif;font-size:11.5px;letter-spacing:.04em;color:var(--sh-sub);margin-top:14px;line-height:1.6;}',
+      '.shih-btn{border:1px solid var(--line);background:transparent;border-radius:9px;padding:10px 20px;font-size:13.5px;color:var(--sub);cursor:pointer;font-family:var(--sans);}',
+      '.shih-btn:hover{border-color:var(--ink);color:var(--ink);}',
+      '.shih-btn.primary{background:var(--btn);border-color:var(--btn);color:var(--btn-fg);}',
+      '.shih-btn.primary:hover{opacity:.9;color:var(--btn-fg);border-color:var(--btn);}',
+      '.shih-btn.primary:disabled{opacity:.5;cursor:default;}',
+      '.shih-x:focus-visible,.shih-headerbtn:focus-visible,.shih-tab:focus-visible,.shih-btn:focus-visible,.shih-setlink:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}',
+      '.shih-foot{font-size:11.5px;color:var(--sub);margin-top:14px;line-height:1.6;}',
       '.shih-stats{text-align:left;font-size:13.5px;}',
-      '.shih-stat-row{display:flex;justify-content:space-between;align-items:baseline;padding:12px 2px;border-bottom:1px solid var(--sh-line);}',
-      '.shih-stat-row span{font-family:-apple-system,"PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif;color:var(--sh-sub);font-size:12.5px;letter-spacing:.06em;}',
-      '.shih-stat-row b{font-family:var(--sh-serif);font-weight:600;font-size:16px;} .shih-stat-row b.ok{color:var(--sh-accent);} .shih-stat-row b.no{color:var(--sh-sub);}',
-      '.shih-hist{display:flex;align-items:flex-end;gap:9px;height:64px;margin:16px 2px 6px;}',
-      '.shih-hbar{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:6px;}',
-      '.shih-hbar i{width:100%;height:42px;background:var(--sh-line);border-radius:7px;display:block;} .shih-hbar.on i{background:linear-gradient(#c0523f,#a23b2a);}',
-      '.shih-hbar span{font-family:-apple-system,"PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif;font-size:10.5px;color:var(--sh-sub);}',
-      '.shih-offline{font-family:-apple-system,"PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif;font-size:13px;color:var(--sh-sub);text-align:center;padding:18px 4px;}',
-      '.shih-sec-title{font-family:-apple-system,"PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif;font-weight:600;margin:18px 0 6px;font-size:11.5px;letter-spacing:.24em;color:var(--sh-accent);}',
-      '.shih-field{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 2px;font-size:12.5px;font-family:-apple-system,"PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif;color:var(--sh-ink);}',
-      '.shih-field input:not([type=checkbox]),.shih-field select{border:1px solid var(--sh-line);background:rgba(255,255,255,.5);border-radius:8px;padding:6px 9px;font-size:12.5px;color:var(--sh-ink);font-family:-apple-system,"PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif;min-width:200px;}',
-      '.shih-field input[type=checkbox]{min-width:auto;width:auto;accent-color:var(--sh-accent);}',
-      '.shih-msg{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;font-size:11.5px;color:var(--sh-accent);margin-top:8px;text-align:center;}',
-      '.shih-hint{display:flex;gap:8px;align-items:center;justify-content:space-between;background:rgba(162,59,42,.08);border:1px solid rgba(162,59,42,.28);border-radius:10px;padding:9px 12px;margin-bottom:12px;font-family:-apple-system,"PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif;font-size:11.5px;color:var(--sh-sub);text-align:left;line-height:1.6;}',
-      '.shih-hint-x{border:none;background:var(--sh-accent,#a23b2a);color:var(--sh-accent-fg,#f7f2e6);border-radius:7px;padding:4px 10px;font-size:11.5px;cursor:pointer;white-space:nowrap;flex:0 0 auto;}',
-      '.shih-headerbtn{--hb-ink:#2b2a26;--hb-accent:#a23b2a;display:inline-flex;align-items:center;gap:6px;background:#f7f2e6;border:1px solid rgba(90,70,40,.28);border-radius:9px;padding:5px 12px;font-size:12.5px;font-weight:600;color:var(--hb-ink);cursor:pointer;font-family:"Source Han Serif SC","Songti SC",serif;letter-spacing:.1em;line-height:1;box-shadow:0 1px 3px rgba(70,55,30,.18);}',
-      '.shih-headerbtn:hover{border-color:var(--hb-accent);color:var(--hb-accent);}',
-      '.shih-headerbtn.done{background:transparent;border-color:rgba(162,59,42,.45);color:var(--hb-accent);}',
-      '.shih-headerbtn.due{color:var(--hb-accent);border-color:var(--hb-accent);animation:shih-pulse 2.2s ease-in-out infinite;}',
+      '.shih-sec-title{font-weight:600;margin:4px 0 8px;font-size:11.5px;letter-spacing:.18em;color:var(--accent);text-align:left;}',
+      '.shih-field{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 2px;font-size:12.5px;color:var(--ink);text-align:left;}',
+      '.shih-field input:not([type=checkbox]),.shih-field select{border:1px solid var(--line);background:#ffffff;border-radius:8px;padding:6px 9px;font-size:12.5px;color:var(--ink);font-family:var(--sans);min-width:200px;}',
+      '.shih-field input[type=checkbox]{min-width:auto;width:16px;height:16px;accent-color:var(--accent);}',
+      '.shih-msg{font-size:12px;color:var(--accent);margin-top:8px;text-align:center;}',
+      '.shih-hero{display:flex;flex-direction:column;align-items:center;gap:10px;margin:6px 0 2px;}',
+      '.shih-seal{width:58px;height:58px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:28px;border:1px solid var(--line);color:var(--sub);background:transparent;}',
+      '.shih-seal.on{background:var(--accent);border-color:var(--accent);color:var(--accent-fg);box-shadow:0 6px 16px rgba(181,72,47,.28);}',
+      '.shih-heroline{font-size:15px;font-weight:600;color:var(--ink);}',
+      '.shih-daygrid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin:16px 2px 4px;}',
+      '.shih-cell{aspect-ratio:1/1;border-radius:8px;border:1px solid var(--line);background:#f3f2ee;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:var(--sub);}',
+      '.shih-cell i{font-style:normal;font-size:12px;line-height:1;}',
+      '.shih-cell.on{background:var(--accent);border-color:var(--accent);color:var(--accent-fg);}',
+      '.shih-cell.today{outline:2px solid rgba(181,72,47,.45);outline-offset:2px;}',
+      '.shih-cell-dow{font-size:9.5px;opacity:.8;}',
+      '.shih-nums{display:flex;justify-content:space-around;margin:16px 0 4px;text-align:center;}',
+      '.shih-numitem{padding:0 8px;} .shih-numitem + .shih-numitem{border-left:1px solid var(--line);}',
+      '.shih-numitem .n{font-size:22px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums;}',
+      '.shih-numitem .l{font-size:11px;color:var(--sub);margin-top:3px;}',
+      '.shih-statsfoot{display:flex;justify-content:flex-end;margin-top:14px;}',
+      '.shih-setlink{font-size:12.5px;color:var(--accent);cursor:pointer;}',
+      '.shih-offline{font-size:13px;color:var(--sub);text-align:center;padding:18px 4px;}',
+      '.shih-hint{display:flex;gap:8px;align-items:center;justify-content:space-between;background:rgba(181,72,47,.06);border:1px solid rgba(181,72,47,.22);border-radius:10px;padding:9px 12px;margin-bottom:12px;font-size:11.5px;color:var(--sub);text-align:left;line-height:1.6;}',
+      '.shih-hint-x{border:none;background:var(--accent);color:var(--accent-fg);border-radius:7px;padding:4px 10px;font-size:11.5px;cursor:pointer;white-space:nowrap;flex:0 0 auto;}',
+      '.shih-headerbtn{--hb:#171716;--hba:#b5482f;display:inline-flex;align-items:center;gap:6px;background:#ffffff;border:1px solid #e6e5e0;border-radius:9px;padding:5px 12px;font-size:12.5px;font-weight:600;color:var(--hb);cursor:pointer;font-family:var(--sans);letter-spacing:.02em;line-height:1;box-shadow:0 1px 3px rgba(0,0,0,.08);}',
+      '.shih-headerbtn:hover{border-color:var(--hb);}',
+      '.shih-headerbtn.done{background:transparent;border-color:rgba(181,72,47,.35);color:var(--hba);}',
+      '.shih-headerbtn.due{color:var(--hba);border-color:var(--hba);animation:shih-pulse 2.2s ease-in-out infinite;}',
       '.shih-dot{width:8px;height:8px;border-radius:50%;background:currentColor;opacity:.85;}',
-      '@keyframes shih-pulse{0%,100%{box-shadow:0 0 0 0 rgba(162,59,42,0);}50%{box-shadow:0 0 0 5px rgba(162,59,42,.22);}}',
-      '.shih-toast{--sh-ink:#2b2a26;--sh-sub:#6b5f49;--sh-line:rgba(43,42,38,.16);--sh-accent:#a23b2a;--sh-serif:"Source Han Serif SC","Songti SC",serif;position:fixed;right:18px;bottom:18px;z-index:60;display:flex;align-items:center;gap:10px;background:radial-gradient(120% 120% at 0% 0%,#f8f3e7,#efe7d6 80%);border:1px solid rgba(90,70,40,.24);border-radius:14px;padding:12px 14px;box-shadow:0 12px 34px rgba(60,45,25,.24);max-width:340px;text-align:left;font-family:var(--sh-serif);color:var(--sh-ink);}',
-      '.shih-toast-t{font-size:13px;line-height:1.4;letter-spacing:.04em;}',
-      '.shih-toast-b{border:1px solid var(--sh-line);background:transparent;color:var(--sh-sub);border-radius:8px;padding:6px 11px;font-size:12.5px;cursor:pointer;font-family:var(--sh-serif);letter-spacing:.08em;white-space:nowrap;}',
-      '.shih-toast-b.primary{background:var(--sh-accent,#a23b2a);border-color:var(--sh-accent,#a23b2a);color:var(--sh-accent-fg,#f7f2e6);}',
-      '@media (prefers-reduced-motion: reduce){.shih-headerbtn.due{animation:none;}.shih-pacer,.shih-glow{transition:none;}}',
+      '@keyframes shih-pulse{0%,100%{box-shadow:0 0 0 0 rgba(181,72,47,0);}50%{box-shadow:0 0 0 5px rgba(181,72,47,.2);}}',
+      '.shih-toast{--ink:#171716;--sub:#6b6b66;--line:#e6e5e0;--accent:#b5482f;position:fixed;right:18px;bottom:18px;z-index:60;display:flex;align-items:center;gap:10px;background:#ffffff;border:1px solid var(--line);border-radius:14px;padding:12px 14px;box-shadow:0 12px 34px rgba(0,0,0,.16);max-width:340px;text-align:left;color:var(--ink);font-family:var(--sans);}',
+      '.shih-toast-t{font-size:13px;line-height:1.4;}',
+      '.shih-toast-b{border:1px solid var(--line);background:transparent;color:var(--sub);border-radius:8px;padding:6px 11px;font-size:12.5px;cursor:pointer;white-space:nowrap;font-family:var(--sans);}',
+      '.shih-toast-b.primary{background:var(--accent);border-color:var(--accent);color:#ffffff;}',
+      '@media (prefers-reduced-motion: reduce){.shih-headerbtn.due{animation:none;}}',
       '@media (prefers-color-scheme: dark){',
-        '.shih-card{--sh-ink:#ece7dc;--sh-sub:#b3a794;--sh-line:rgba(236,231,220,.16);--sh-accent:#d98a5f;--sh-accent-fg:#1c130d;--sh-glow:rgba(210,150,90,.20);--sh-paper:radial-gradient(120% 100% at 50% 0%,#241d15,#1a140e 68%,#120d09 100%);--sh-btn-bg:#7a4630;--sh-btn-fg:#f7f2e6;border-color:rgba(210,150,90,.22);box-shadow:0 22px 60px rgba(0,0,0,.5),inset 0 0 90px rgba(210,150,90,.05);}',
-        '.shih-scrim{background:rgba(8,6,4,.5);}',
+        '.shih-card{--ink:#ececec;--sub:#9a9a95;--line:rgba(255,255,255,.10);--accent:#c9644a;--accent-fg:#141414;--bg:#141414;--panel:#1b1b19;--btn:#f0efeb;--btn-fg:#171716;border-color:rgba(255,255,255,.08);box-shadow:0 18px 44px rgba(0,0,0,.5);}',
+        '.shih-scrim{background:rgba(0,0,0,.55);}',
+        '.shih-pacer{background:radial-gradient(circle at 42% 36%,#232323,#1a1a18 70%);border-color:rgba(255,255,255,.1);box-shadow:inset 0 2px 8px rgba(255,255,255,.06),0 10px 26px rgba(0,0,0,.4);}',
+        '.shih-cell{background:#1f1f1d;border-color:rgba(255,255,255,.09);}',
         '.shih-field input:not([type=checkbox]),.shih-field select{background:rgba(255,255,255,.06);}',
-        '.shih-headerbtn{--hb-ink:#ece7dc;--hb-accent:#d98a5f;background:rgba(255,255,255,.06);border-color:rgba(217,138,95,.32);}',
-        '.shih-headerbtn.done{background:transparent;border-color:rgba(217,138,95,.5);color:var(--hb-accent);}',
-        '.shih-toast{--sh-ink:#ece7dc;--sh-sub:#b3a794;--sh-line:rgba(236,231,220,.16);--sh-accent:#d98a5f;--sh-accent-fg:#1c130d;background:radial-gradient(120% 120% at 0% 0%,#241d15,#1a140e 85%);border-color:rgba(217,138,95,.24);}',
-        '.shih-hint{background:rgba(217,138,95,.12);border-color:rgba(217,138,95,.3);}',
-        '.shih-pacer{background:radial-gradient(circle at 40% 34%,#fff7ea 0%,#ffdca8 38%,#e9b878 72%,#d9a463 88%,rgba(217,164,99,0) 100%);box-shadow:0 0 0 1px rgba(217,138,95,.4),0 8px 22px rgba(0,0,0,.35),inset 0 3px 10px rgba(255,255,255,.75),inset 0 -10px 20px rgba(180,120,60,.35);}',
-        '.shih-hbar i{background:#9a8f76;} .shih-hbar.on i{background:linear-gradient(#e0916f,#c96b4e);}',
+        '.shih-headerbtn{--hb:#ececec;--hba:#c9644a;background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.14);box-shadow:none;}',
+        '.shih-headerbtn.done{background:transparent;border-color:rgba(201,100,74,.6);}',
+        '.shih-toast{background:#1b1b19;border-color:rgba(255,255,255,.1);color:#ececec;}',
+        '.shih-hint{background:rgba(201,100,74,.1);border-color:rgba(201,100,74,.3);}',
       '}',
     ].join('');
 
@@ -264,6 +272,7 @@ window.__ModuleLoader__.load({
       const [msg, setMsg] = useState('');
       const [dnd, setDnd] = useState(!!store.dnd);
       const [err, setErr] = useState(false);
+      const [showSettings, setShowSettings] = useState(false);
 
       function load() {
         setErr(false);
@@ -277,7 +286,9 @@ window.__ModuleLoader__.load({
       useEffect(function () { load(); }, []);
 
       function save() {
-        const body = { recipient: String(recipient).trim(), threshold_missed_days: Number(threshold) };
+        const rc = String(recipient).trim();
+        if (rc && rc.indexOf('@') < 0) { setMsg(EXTRA.stEmailBad); return; }
+        const body = { recipient: rc, threshold_missed_days: Number(threshold) };
         fetch(REC + '/config', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
           .then(function (r) { return r.json(); }).then(function () { setMsg(t.savedMsg); load(); }).catch(function () { setMsg(t.failMsg); });
       }
@@ -288,32 +299,52 @@ window.__ModuleLoader__.load({
           .then(function () { setMsg(t.pausedMsg); }).catch(function () { setMsg(t.failMsg); });
       }
 
+      const DOW = LANG === 'en' ? ['S', 'M', 'T', 'W', 'T', 'F', 'S'] : ['日', '一', '二', '三', '四', '五', '六'];
+      function dow(ds) { try { return DOW[new Date(ds + 'T00:00:00').getDay()]; } catch (e) { return ''; } }
+      const weekDone = hist.filter(function (x) { return x.done; }).length;
+      const todayDone = !!(s && s.todayDone);
+      const streakN = s ? (s.streak || 0) : 0;
+      const longest = s ? (s.longest || 0) : 0;
+
       if (err) {
         return h('div', { className: 'shih-stats' },
           h('div', { className: 'shih-offline' }, LANG === 'en' ? 'Recorder offline — stats unavailable.' : '记账服务离线，统计暂不可用。'),
           h('div', { className: 'shih-actions', style: { justifyContent: 'center', marginTop: '12px' } },
             h('button', { className: 'shih-btn primary', onClick: load }, LANG === 'en' ? 'Retry' : '重试')));
       }
+      if (showSettings) {
+        return h('div', { className: 'shih-stats' },
+          h('div', { className: 'shih-sec-title' }, t.setTitle),
+          h('label', { className: 'shih-field' }, h('span', null, t.stRecipient), h('input', { value: recipient, onChange: function (e) { setRecipient(e.target.value); }, placeholder: 'you@example.com' })),
+          h('label', { className: 'shih-field' }, h('span', null, t.stThreshold), h('select', { value: threshold, onChange: function (e) { setThreshold(e.target.value); } },
+            h('option', { value: '1' }, '1 ' + t.stDays), h('option', { value: '2' }, '2 ' + t.stDays), h('option', { value: '3' }, '3 ' + t.stDays))),
+          h('label', { className: 'shih-field' }, h('span', null, EXTRA.dndLabel), h('input', { type: 'checkbox', checked: dnd, onChange: function (e) { setDnd(e.target.checked); store.dnd = e.target.checked; if (e.target.checked) store.aiNudge = false; try { localStorage.setItem('shih.dnd', e.target.checked ? '1' : '0'); } catch (_) {} emit(); } })),
+          h('div', { className: 'shih-actions', style: { marginTop: '10px' } },
+            h('button', { className: 'shih-btn primary', onClick: save }, t.save),
+            h('button', { className: 'shih-btn', onClick: pauseToday }, t.pauseToday)),
+          msg ? h('div', { className: 'shih-msg' }, msg) : null,
+          h('div', { className: 'shih-statsfoot' }, h('div', { className: 'shih-setlink', onClick: function () { setShowSettings(false); setMsg(''); } }, '‹ ' + (LANG === 'en' ? 'Back' : '返回'))));
+      }
+
       return h('div', { className: 'shih-stats' },
-        h('div', { className: 'shih-stat-row' }, h('span', null, t.stToday), h('b', { className: s && s.todayDone ? 'ok' : 'no' }, s ? (s.todayDone ? t.stDone : t.stNotDone) : '…')),
-        h('div', { className: 'shih-stat-row' }, h('span', null, t.stStreakTotal), h('b', null, (s ? (s.streak || 0) : '…') + ' ' + t.stDays + ' / ' + (s ? (s.total || 0) : '…') + ' ' + t.stTimes)),
-        h('div', { className: 'shih-stat-row' }, h('span', null, t.stLast), h('b', null, (s && s.last) ? s.last : '—')),
-        (s && s.missed > 0) ? h('div', { className: 'shih-stat-row' }, h('span', null, t.stMissed), h('b', null, s.missed + ' ' + t.stDays)) : null,
-        h('div', { className: 'shih-hist' }, hist.map(function (x, i) {
-          return h('div', { key: i, className: 'shih-hbar' + (x.done ? ' on' : '') },
-            h('i', null),
-            h('span', null, String(x.date || '').slice(5)));
+        h('div', { className: 'shih-hero' },
+          h('div', { className: 'shih-seal' + (todayDone ? ' on' : ''), 'aria-label': todayDone ? (LANG === 'en' ? 'Marked today' : '今日已印') : (LANG === 'en' ? 'Not yet today' : '今日未印') }, '印'),
+          h('div', { className: 'shih-heroline' }, todayDone
+            ? (LANG === 'en' ? ('Marked today' + (streakN > 1 ? ' · ' + streakN + '-day streak' : '')) : ('今日已印' + (streakN > 1 ? ' · 连续 ' + streakN + ' 天' : '')))
+            : (LANG === 'en' ? 'Not yet today' : '今日未印'))),
+        (!todayDone) ? h('div', { className: 'shih-actions', style: { marginTop: '4px' } },
+          h('button', { className: 'shih-btn primary', onClick: openAndStart }, LANG === 'en' ? 'Breathe now · ~33s' : '现在补一次 · 约 33 秒')) : null,
+        h('div', { className: 'shih-daygrid' }, hist.map(function (x, i) {
+          return h('div', { key: i, className: 'shih-cell' + (x.done ? ' on' : '') + (i === hist.length - 1 ? ' today' : ''), 'aria-label': (x.date || '') + (x.done ? (LANG === 'en' ? ' done' : ' 已印') : (LANG === 'en' ? ' none' : ' 未印')) },
+            h('span', { className: 'shih-cell-dow' }, dow(x.date)),
+            h('i', null, x.done ? '印' : ''));
         })),
-        h('div', { className: 'shih-sec-title' }, t.setTitle),
-        h('label', { className: 'shih-field' }, h('span', null, t.stRecipient), h('input', { value: recipient, onChange: function (e) { setRecipient(e.target.value); }, placeholder: 'you@example.com' })),
-        h('label', { className: 'shih-field' }, h('span', null, t.stThreshold), h('select', { value: threshold, onChange: function (e) { setThreshold(e.target.value); } },
-          h('option', { value: '1' }, '1 ' + t.stDays), h('option', { value: '2' }, '2 ' + t.stDays), h('option', { value: '3' }, '3 ' + t.stDays))),
-        h('label', { className: 'shih-field' }, h('span', null, EXTRA.dndLabel), h('input', { type: 'checkbox', checked: dnd, onChange: function (e) { setDnd(e.target.checked); store.dnd = e.target.checked; if (e.target.checked) store.aiNudge = false; try { localStorage.setItem('shih.dnd', e.target.checked ? '1' : '0'); } catch (_) {} emit(); } })),
-        h('div', { className: 'shih-actions' },
-          h('button', { className: 'shih-btn primary', onClick: save }, t.save),
-          h('button', { className: 'shih-btn', onClick: pauseToday }, t.pauseToday)),
-        msg ? h('div', { className: 'shih-msg' }, msg) : null
-      );
+        h('div', { className: 'shih-nums' },
+          h('div', { className: 'shih-numitem' }, h('div', { className: 'n' }, weekDone + '/7'), h('div', { className: 'l' }, LANG === 'en' ? 'last 7d' : '近7天')),
+          h('div', { className: 'shih-numitem' }, h('div', { className: 'n' }, s ? s.total : '…'), h('div', { className: 'l' }, LANG === 'en' ? 'days total' : '累计(天)')),
+          h('div', { className: 'shih-numitem' }, h('div', { className: 'n' }, s ? longest : '…'), h('div', { className: 'l' }, LANG === 'en' ? 'longest' : '最长'))),
+        h('div', { className: 'shih-statsfoot' },
+          h('div', { className: 'shih-setlink', onClick: function () { setShowSettings(true); } }, (LANG === 'en' ? 'Settings' : '设置') + ' ▸')));
     }
 
     function Overlay() {
